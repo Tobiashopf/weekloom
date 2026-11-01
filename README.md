@@ -48,13 +48,11 @@ The project view also shows effort-weighted completion once every task has an es
 
 See [weekly planning rules and acceptance steps](docs/WEEKLY_PLANNING.md). When upgrading a database containing existing tasks, the application saves a `*.pre-planning-*.sqlite3` copy next to it before adding planning fields. The copy is a migration safeguard, not a user-facing backup/restore feature. Existing tasks start with no estimate, execution date or prerequisite.
 
-## Verify
-
-### Subtask checklists
+## Subtask checklists
 
 Select a task and choose **Subtarefas**. Add steps, mark/unmark them, or remove an item after confirmation. All remaining items must be checked before the parent task can be completed. A finished parent must be reopened before adding an unchecked item or unchecking an existing item. Blocked tasks cannot execute checklist steps. Checking all items does not automatically complete the parent. Checklist items do not add separate weight to project progress or weekly effort.
 
-### Optional Windows background reminders
+## Optional Windows background reminders
 
 Select a task and choose **Lembrete** to enter a local date and time (`YYYY-MM-DD HH:MM`). A custom reminder is sent once when that time is reached. Clearing it restores the default daily rule: after 09:00, unfinished tasks due by tomorrow qualify for a reminder. Completed tasks do not qualify.
 
@@ -62,7 +60,7 @@ Open **Notificações do Windows** to activate, deactivate, query the schedule o
 
 **Integration status:** the owner confirmed that the test notification appeared and the scheduler status was active without errors in the normal Windows session. This is owner-reported verification; the assistant's execution environment could not access these Windows services. Timed closed-app delivery and sleep/battery behavior have not been separately confirmed. For this development computer, `Launch-PlanoLocal.cmd` is supplied outside the repository. See [setup, limitations and verification](docs/WINDOWS_REMINDERS.md).
 
-### Backup and restore
+## Backup and restore
 
 Choose **Criar backup** to save a `.plano-backup` file containing projects, tasks, checklists, planning fields, weekly capacities and the reminder delivery ledger. The file is a versioned, data-only JSON snapshot and is not encrypted.
 
@@ -70,7 +68,7 @@ Choose **Restaurar** to inspect and restore a supported backup. The confirmation
 
 Restoring does not merge projects or install the Windows schedule. Restoring an older reminder ledger may make old reminders eligible again. Close other application windows before restoring. See [backup rules and recovery steps](docs/BACKUPS.md).
 
-### Automated checks
+## Automated checks
 
 ```sh
 python -m unittest discover -s tests -v
@@ -92,6 +90,6 @@ Start with the [user acceptance checklist](docs/USER_ACCEPTANCE.md) to try the p
 
 See [ROADMAP.md](ROADMAP.md) for proposed future work. Estimates are preliminary engineering estimates, not a commitment of paid hours. Git history should record actual work as it occurs, without backdating or manufacturing activity.
 
-Developed with substantial AI assistance. The project direction was selected by Tobias Hopf; implementation and documentation were produced with an AI coding assistant. Owner review and real-use validation remain pending.
+Developed with substantial AI assistance. Tobias Hopf selected the project direction, tested the application and supplied feature feedback. Code and documentation were produced with an AI coding assistant. Owner-reported checks include weekly planning, backup/restore, Windows test notification visibility and active scheduler status. Sustained use, clean-machine installation and broader usability validation remain future work.
 
 License: MIT, see [LICENSE](LICENSE).

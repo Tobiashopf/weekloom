@@ -79,3 +79,12 @@ Initial owner feedback has been received (see below). Feature acceptance, visual
 - The owner reported that the proposed backup/restore exercise was completed and worked successfully.
 - Recorded the basic flow as owner-confirmed. No separate claim is made about the optional reversal through the recovery copy or exhaustive field-by-field verification.
 - Updated acceptance documentation only; application code is unchanged and the passing automated checks from the implementation remain applicable.
+
+## November 1, 2026 — Publication preparation
+
+- The owner confirmed sole personal ownership, development using personal time/equipment, and no employer, client, university, company or confidentiality-agreement involvement.
+- The owner confirmed an intention to continue using and developing the project independently of selection into an external program.
+- Updated the README to reflect completed owner-reported checks without claiming sustained use or clean-machine validation.
+- Refined the roadmap into seven concrete remaining tasks. The planning estimate is 24 hours within the existing 19–29 hour range; no completed work is counted as future effort.
+- A pattern-based review of reachable Git history found no matching credentials, personal email addresses, machine-specific user paths, database files or backup files. This is a scoped review, not a guarantee against all possible sensitive data.
+- Publication still requires authenticated GitHub access. The original repository and commit history will be preserved.
