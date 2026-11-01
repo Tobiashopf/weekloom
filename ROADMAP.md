@@ -1,6 +1,6 @@
 # Development roadmap
 
-Plano Local helps me turn personal projects into achievable weekly work. The current prototype supports tasks, checklists, dependencies, effort estimates, weekly capacity, reminders and backup/restore. I intend to continue using and improving it independently of any external program.
+Weekloom helps me turn personal projects into achievable weekly work. The current prototype supports tasks, checklists, dependencies, effort estimates, weekly capacity, reminders and backup/restore. I intend to continue using and improving it independently of any external program.
 
 The owner has reported successful checks of weekly planning and backup/restore, as well as Windows test notification visibility and active scheduler status. Sustained use, timed closed-app delivery and clean-machine installation still need further evidence.
 

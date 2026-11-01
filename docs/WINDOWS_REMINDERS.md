@@ -7,7 +7,7 @@ The owner confirmed that the test notification appeared and **Consultar estado**
 ## Setup in a normal Windows session
 
 1. Close earlier application windows so the latest version is used.
-2. Launch the application directly on Windows. On the development computer, double-click the separate `Launch-PlanoLocal.cmd` file. On other computers, follow the README Python instructions.
+2. Launch the application directly on Windows. On the development computer, double-click the separate `Launch-Weekloom.cmd` file. On other computers, follow the README Python instructions.
 3. Open **Notificações do Windows** and choose **Testar aviso**.
 4. Confirm whether the notification appeared. An accepted API request alone is not evidence of visible delivery; Windows may suppress it.
 5. Choose **Ativar** and then **Consultar estado**. Registration must succeed before closed-app reminders are expected to work. If Windows reports an error, preserve the message for diagnosis; do not change system security settings to suppress it.

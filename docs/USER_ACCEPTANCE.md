@@ -4,7 +4,7 @@ Status: the owner reported that the initial application worked. Individual check
 
 ## Preparation
 
-Allow 15–20 minutes. Start the application using the README instructions. On the current development computer, a separate Start-PlanoLocal.ps1 launcher is provided outside this repository.
+Allow 15–20 minutes. Start the application using the README instructions. On the current development computer, a separate Launch-Weekloom.cmd launcher is provided outside this repository.
 
 Use a personal activity such as learning drawing or assembling a model kit. Do not enter information about other people or confidential work. The interface is Portuguese; project documentation is English.
 

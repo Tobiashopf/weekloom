@@ -1,4 +1,6 @@
-# Plano Local
+# Weekloom
+
+Previously named Plano Local. The rename preserves existing project data, backups and reminder schedules. Compatibility paths and identifiers (`PlanoLocal`, `PlanoLocal-Reminders-*` and `.plano-backup`) remain supported; new backups identify the application as Weekloom and old backups can still be restored.
 
 A desktop planner for personal projects, written in Python with Tkinter and SQLite. Create projects, break them into tasks, set optional deadlines and track completion without an account or external service.
 
@@ -58,7 +60,7 @@ Select a task and choose **Lembrete** to enter a local date and time (`YYYY-MM-D
 
 Open **Notificações do Windows** to activate, deactivate, query the schedule or request a test notification. The background worker checks every five minutes while the user is signed in, even when the application window is closed. Windows notification settings may suppress visible popups. No administrator account or password is requested. Paths to Python, the project and the database must remain available.
 
-**Integration status:** the owner confirmed that the test notification appeared and the scheduler status was active without errors in the normal Windows session. This is owner-reported verification; the assistant's execution environment could not access these Windows services. Timed closed-app delivery and sleep/battery behavior have not been separately confirmed. For this development computer, `Launch-PlanoLocal.cmd` is supplied outside the repository. See [setup, limitations and verification](docs/WINDOWS_REMINDERS.md).
+**Integration status:** the owner confirmed that the test notification appeared and the scheduler status was active without errors in the normal Windows session. This is owner-reported verification; the assistant's execution environment could not access these Windows services. Timed closed-app delivery and sleep/battery behavior have not been separately confirmed. For this development computer, `Launch-Weekloom.cmd` is supplied outside the repository. See [setup, limitations and verification](docs/WINDOWS_REMINDERS.md).
 
 ## Backup and restore
 

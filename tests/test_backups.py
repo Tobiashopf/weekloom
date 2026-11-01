@@ -46,6 +46,17 @@ class BackupTests(unittest.TestCase):
         self.assertEqual(self.tables(), original)
         self.assertEqual(self.store.db.execute("PRAGMA foreign_key_check").fetchall(), [])
 
+    def test_renamed_app_accepts_legacy_and_new_backup_identity(self):
+        original = self.tables()
+        create_backup(self.store, self.backup)
+        payload = read_backup(self.backup)
+        self.assertEqual(payload["application"], "Weekloom")
+        payload["application"] = "Plano Local"
+        self.backup.write_text(json.dumps(payload), encoding="utf-8")
+        self.store.add_project("Temporary")
+        restore_backup(self.store, self.backup)
+        self.assertEqual(self.tables(), original)
+
     def test_invalid_files_and_invariants_preserve_live_data(self):
         create_backup(self.store, self.backup)
         payload = read_backup(self.backup)

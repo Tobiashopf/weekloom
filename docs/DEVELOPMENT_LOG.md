@@ -88,3 +88,11 @@ Initial owner feedback has been received (see below). Feature acceptance, visual
 - Refined the roadmap into seven concrete remaining tasks. The planning estimate is 24 hours within the existing 19–29 hour range; no completed work is counted as future effort.
 - A pattern-based review of reachable Git history found no matching credentials, personal email addresses, machine-specific user paths, database files or backup files. This is a scoped review, not a guarantee against all possible sensitive data.
 - Publication still requires authenticated GitHub access. The original repository and commit history will be preserved.
+
+## November 1, 2026 — Rename to Weekloom
+
+- The owner selected Weekloom as the project name.
+- Updated the application heading, window and notification titles, backup labels and current project documentation.
+- New backup files use Weekloom as their application identity; restoration accepts both Weekloom and the former Plano Local identity.
+- Retained the existing local repository directory, database paths, reminder-task identifiers and backup extension so saved data, installed schedules and existing launchers continue to work.
+- Provided a development launcher named Launch-Weekloom.cmd. GitHub renaming must target the existing repository, preserving its identity and commit history rather than creating a replacement repository.

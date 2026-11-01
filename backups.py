@@ -17,7 +17,7 @@ TABLES = {
 
 
 def snapshot(store):
-    return {"application": "Plano Local", "backup_version": 1,
+    return {"application": "Weekloom", "backup_version": 1,
             "created_at": datetime.now().isoformat(),
             "tables": {table: [dict(zip(columns, row)) for row in store.db.execute(
                 f"SELECT {','.join(columns)} FROM {table}")]
@@ -72,7 +72,7 @@ def valid_date(value):
 
 def validate(payload):
     """Validate types, relationships and domain invariants before touching live data."""
-    if not isinstance(payload, dict) or payload.get("application") != "Plano Local" or type(payload.get("backup_version")) is not int or payload["backup_version"] != 1:
+    if not isinstance(payload, dict) or payload.get("application") not in ("Weekloom", "Plano Local") or type(payload.get("backup_version")) is not int or payload["backup_version"] != 1:
         reject()
     tables = payload.get("tables")
     if not isinstance(tables, dict) or set(tables) != set(TABLES):

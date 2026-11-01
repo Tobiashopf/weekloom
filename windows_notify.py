@@ -35,16 +35,16 @@ def show_notification(count):
     user.DispatchMessageW.restype = C.c_ssize_t
     shell.Shell_NotifyIconW.argtypes = [W.DWORD, C.POINTER(IconData)]
     shell.Shell_NotifyIconW.restype = W.BOOL
-    window = user.CreateWindowExW(0, "STATIC", "Plano Local reminder", 0, 0, 0, 0, 0, None, None, None, None)
+    window = user.CreateWindowExW(0, "STATIC", "Weekloom reminder", 0, 0, 0, 0, 0, None, None, None, None)
     if not window:
         raise C.WinError(C.get_last_error())
     data = IconData()
     data.cbSize = C.sizeof(IconData)
     data.hWnd, data.uID, data.uFlags = window, 1, 2 | 4 | 16
     data.hIcon = user.LoadIconW(None, 32516)
-    data.szTip = data.szInfoTitle = "Plano Local"
-    data.szInfo = ("Teste de notificação do Plano Local." if count == 0 else
-                   f"{count} tarefa(s) precisam de sua atenção. Abra o Plano Local para revisar os prazos e lembretes.")
+    data.szTip = data.szInfoTitle = "Weekloom"
+    data.szInfo = ("Teste de notificação do Weekloom." if count == 0 else
+                   f"{count} tarefa(s) precisam de sua atenção. Abra o Weekloom para revisar os prazos e lembretes.")
     data.dwInfoFlags, data.uTimeout = 1, 10000
     added = False
     try:

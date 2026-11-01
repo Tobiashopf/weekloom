@@ -35,7 +35,7 @@ def task_xml(data, python, sid):
     worker = Path(__file__).resolve().with_name("notifications.py")
     root = ET.Element("Task", version="1.2", xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task")
     info = ET.SubElement(root, "RegistrationInfo")
-    ET.SubElement(info, "Description").text = "Plano Local personal task reminders; checks every five minutes while the user is signed in."
+    ET.SubElement(info, "Description").text = "Weekloom personal task reminders; checks every five minutes while the user is signed in."
     triggers = ET.SubElement(root, "Triggers")
     trigger = ET.SubElement(triggers, "TimeTrigger")
     repetition = ET.SubElement(trigger, "Repetition")

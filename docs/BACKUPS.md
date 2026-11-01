@@ -18,7 +18,7 @@ Backups are ordinary unencrypted JSON files. Store them in a location appropriat
 
 ## Restoring a backup
 
-1. Close other Plano Local windows to avoid editing from stale views.
+1. Close other Weekloom windows to avoid editing from stale views.
 2. Choose **Restaurar** and select the file.
 3. Review the project and task counts. Restoration replaces all existing application data; it does not merge data.
 4. Confirm only if this is the intended snapshot.

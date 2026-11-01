@@ -20,7 +20,7 @@ class App:
         self.agenda_window = None
         self.week_window = None
         self.week_day = date.today()
-        root.title("Plano Local — seus projetos pessoais")
+        root.title("Weekloom — seus projetos pessoais")
         root.geometry("1060x680")
         root.minsize(820, 540)
         style = ttk.Style(root)
@@ -31,7 +31,7 @@ class App:
         style.configure("Heading.TLabel", font=("Segoe UI", 22, "bold"))
         outer = ttk.Frame(root, padding=24)
         outer.pack(fill="both", expand=True)
-        ttk.Label(outer, text="Plano Local", style="Heading.TLabel").pack(anchor="w")
+        ttk.Label(outer, text="Weekloom", style="Heading.TLabel").pack(anchor="w")
         ttk.Label(outer, text="Uma próxima ação para cada projeto. Tudo salvo neste computador.").pack(anchor="w", pady=(4, 20))
         reminder_bar = ttk.Frame(outer)
         reminder_bar.pack(fill="x", pady=(0, 12))
@@ -411,7 +411,7 @@ class App:
 
     def create_backup(self):
         from backups import create_backup
-        destination = filedialog.asksaveasfilename(parent=self.root, title="Salvar backup", defaultextension=".plano-backup", initialfile=f"plano-local-{date.today().isoformat()}.plano-backup", filetypes=[("Backup do Plano Local", "*.plano-backup")])
+        destination = filedialog.asksaveasfilename(parent=self.root, title="Salvar backup", defaultextension=".plano-backup", initialfile=f"weekloom-{date.today().isoformat()}.plano-backup", filetypes=[("Backup do Weekloom", "*.plano-backup")])
         if not destination:
             return
         try:
@@ -423,7 +423,7 @@ class App:
 
     def restore_backup(self):
         from backups import read_backup, restore_backup
-        source = filedialog.askopenfilename(parent=self.root, title="Escolher backup para restaurar", filetypes=[("Backup do Plano Local", "*.plano-backup")])
+        source = filedialog.askopenfilename(parent=self.root, title="Escolher backup para restaurar", filetypes=[("Backup do Weekloom", "*.plano-backup")])
         if not source:
             return
         try:
