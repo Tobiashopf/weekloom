@@ -1,5 +1,5 @@
 """Local persistence for a personal project planner. Standard library only."""
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 import sqlite3
 
@@ -61,6 +61,34 @@ class Planner:
             FROM projects p LEFT JOIN tasks t ON t.project_id = p.id
             GROUP BY p.id ORDER BY p.id DESC
         """).fetchall()
+
+    def update_project(self, project_id, name, description):
+        with self.db:
+            cursor = self.db.execute(
+                "UPDATE projects SET name = ?, description = ? WHERE id = ?",
+                (self.required(name), description.strip(), project_id),
+            )
+            if cursor.rowcount != 1:
+                raise ValueError("Projeto não encontrado.")
+
+    @staticmethod
+    def completion(project):
+        return 100 * project["done"] / project["total"] if project["total"] else 0
+
+    def agenda(self):
+        """Return all dated, unfinished tasks across projects, earliest first."""
+        return self.db.execute("""
+            SELECT t.*, p.name AS project_name FROM tasks t
+            JOIN projects p ON p.id = t.project_id
+            WHERE t.due IS NOT NULL AND t.status != 'Concluída'
+            ORDER BY t.due, t.id
+        """).fetchall()
+
+    def due_soon(self, today=None):
+        """Include overdue tasks and deadlines through tomorrow, inclusive."""
+        today = today or date.today()
+        cutoff = (today + timedelta(days=1)).isoformat()
+        return [task for task in self.agenda() if task["due"] <= cutoff]
 
     def add_task(self, project_id, title, due=""):
         with self.db:

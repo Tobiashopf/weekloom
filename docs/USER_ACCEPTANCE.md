@@ -1,6 +1,6 @@
 # First user acceptance session
 
-Status: pending owner execution. This checklist does not represent completed testing.
+Status: the owner reported that the initial application worked. Individual checklist results were not supplied and remain unverified. The new agenda, alerts, percentage display and description editor await owner acceptance.
 
 ## Preparation
 
@@ -38,3 +38,24 @@ Complete only after real use. Feedback may be provided in Portuguese and will be
 ## Completion rule
 
 Actual owner feedback is required. Automated tests and assistant smoke checks do not count as owner acceptance. Convert failures into actionable tasks and update the roadmap before selecting the next feature.
+
+## Owner feedback — November 1, 2026
+
+The owner reported that the application worked and requested:
+
+1. An agenda with alerts when a task deadline is approaching.
+2. An explicit project completion percentage based on task execution.
+3. A project description.
+
+The owner did not report specific test steps or an activity name. These details must not be inferred.
+
+## Follow-up acceptance checklist
+
+- Open **Agenda e alertas** and verify that pending dated tasks appear across projects in deadline order.
+- Create a task due tomorrow and verify the alert banner; sound may depend on system settings.
+- Complete that task and verify it disappears from the agenda and reminder count.
+- Complete one of two tasks and verify 50% is shown. Reopen it and verify 0%.
+- Edit a project description using multiple lines, reopen the application and verify it persists.
+- Confirm whether date-based, in-app alerts meet the need or whether time-of-day and closed-app Windows notifications are needed next.
+
+Follow-up results: pending.

@@ -1,11 +1,11 @@
 # Development roadmap
 
-Initial proposal awaiting owner validation. Estimates must be revised after real use. None of these tasks is complete. Preliminary total: 28–40 hours.
+Initial owner feedback has been received. The owner requested an agenda, approaching-deadline alerts, explicit completion percentages and project descriptions. An initial implementation is complete and awaits owner acceptance. The remaining estimates below are provisional: 26–38 hours.
 
 | Task | Execution steps | Acceptance criteria | Estimate |
 |---|---|---|---|
-| Real-use validation | Plan a personal project; record friction; prioritize changes | Actual owner feedback informs the workflow | 2–3 h |
-| Project editing and archiving | Define behavior; migrate storage; implement editing; test restoration | Archived projects retain tasks and can be restored | 3–4 h |
+| Follow-up real-use validation | Test the requested features; record friction; prioritize changes | Actual owner feedback informs the workflow | 1–2 h |
+| Project archiving | Define behavior; migrate storage; implement archive/restore; test | Archived projects retain tasks and can be restored; name/description editing is already implemented | 2–3 h |
 | Search and filters | Define status/deadline filters; implement controls; test combinations | Find tasks without changing data or mixing projects | 3–4 h |
 | Backup and restore | Create consistent copies; validate format; protect original data; test failures | Restore projects and tasks; reject invalid files | 4–6 h |
 | Export and import | Define versioned JSON; validate input; handle conflicts; test round trips | Preserve content, relationships and statuses | 4–6 h |
@@ -16,6 +16,8 @@ Initial proposal awaiting owner validation. Estimates must be revised after real
 ## Current next step
 
 Follow [the user acceptance checklist](docs/USER_ACCEPTANCE.md). Record actual observations before marking items complete. Select the next implementation priority from that feedback.
+
+Implemented from feedback: chronological agenda, in-app date-based alerts, numeric progress and editable multiline descriptions. Possible follow-up, not included in estimates: time-of-day reminders and native Windows notifications while the application is closed. Confirm the need before selecting a background scheduling design.
 
 ## Submission preparation
 

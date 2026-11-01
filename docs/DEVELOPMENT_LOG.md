@@ -24,4 +24,15 @@ All project documentation and future development records are maintained in Engli
 
 ## Outstanding evidence
 
-Owner feedback, visual/accessibility review, clean-machine installation, ownership certification, full secret/history review, GitHub publication and program submission remain pending.
+Initial owner feedback has been received (see below). Feature acceptance, visual/accessibility review, clean-machine installation, ownership certification, full secret/history review, GitHub publication and program submission remain pending.
+
+## November 1, 2026 — Owner-requested agenda, alerts and project details
+
+- The owner said the prototype worked and requested deadline alerts, an agenda, explicit completion percentages and project descriptions.
+- Added an agenda listing dated unfinished tasks across all projects in deadline order.
+- Added an in-app alert banner and system bell for overdue tasks and deadlines today or tomorrow. Checks run at startup, after saves and every minute while the app is open. Repeated checks suppress sound for unchanged task/date combinations within the running session. Restarting the app or reaching a new local date can alert again.
+- Displayed equal-weight completion percentages in the sidebar and project summary. In-progress tasks are not treated as complete; empty projects show 0%.
+- Added project name editing and multiline description editing. Existing database fields and saved data remain compatible; no schema migration was necessary.
+- All nine persistence/business-rule tests passed, including reminder boundaries across year-end and project description persistence.
+- The explicit GUI smoke check passed for agenda filtering, repeated-alert suppression, description editing and displayed percentage changes.
+- No background notification service was installed. Owner acceptance of these new features is pending.

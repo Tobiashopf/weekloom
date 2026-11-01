@@ -1,0 +1,55 @@
+"""Run explicitly on a computer with a working Tk display: python tests/gui_smoke.py."""
+from datetime import date, timedelta
+from pathlib import Path
+import sys
+import tempfile
+import tkinter as tk
+from tkinter import ttk
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app import App
+from planner import Planner
+
+
+with tempfile.TemporaryDirectory() as temp:
+    store = Planner(Path(temp) / "test.sqlite3")
+    root = tk.Tk()
+    root.withdraw()
+    try:
+        project = store.add_project("Example", "Original")
+        task = store.add_task(project, "Due tomorrow", (date.today() + timedelta(days=1)).isoformat())
+        store.add_task(project, "No deadline")
+        bells = []
+        root.bell = lambda: bells.append(True)
+        app = App(root, store)
+        app.projects.selection_set(str(project))
+        app.select_project()
+        root.update()
+        assert "0%" in app.summary.cget("text")
+        assert len(bells) == 1
+        app.check_reminders()
+        assert len(bells) == 1, "Repeated polling must not repeat the same alert"
+        app.open_agenda()
+        root.update()
+        assert len(app.agenda_tree.get_children()) == 1
+        app.edit_project()
+        root.update()
+        dialog = [w for w in root.winfo_children() if isinstance(w, tk.Toplevel) and w != app.agenda_window][0]
+        body = dialog.winfo_children()[0]
+        description = next(w for w in body.winfo_children() if isinstance(w, tk.Text))
+        description.delete("1.0", "end")
+        description.insert("1.0", "Updated description\nSecond line")
+        next(w for w in body.winfo_children() if isinstance(w, ttk.Button)).invoke()
+        root.update()
+        assert "Updated description" in app.description.cget("text")
+        store.update_task(task, "Due tomorrow", (date.today() + timedelta(days=1)).isoformat(), "Concluída")
+        app.refresh_tasks()
+        app.check_reminders()
+        assert "50%" in app.summary.cget("text")
+        assert len(app.agenda_tree.get_children()) == 0
+        assert "Nenhum prazo" in app.reminder.cget("text")
+        root.after_cancel(app.reminder_timer)
+        print("GUI smoke check passed: agenda, alert deduplication, description editing, progress.")
+    finally:
+        root.destroy()
+        store.close()

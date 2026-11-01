@@ -2,6 +2,7 @@
 import argparse
 from datetime import date
 import os
+import sqlite3
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -13,6 +14,8 @@ class App:
     def __init__(self, root, store):
         self.root, self.store = root, store
         self.project_id = None
+        self.notified = set()
+        self.agenda_window = None
         root.title("Plano Local — seus projetos pessoais")
         root.geometry("1060x680")
         root.minsize(820, 540)
@@ -26,12 +29,19 @@ class App:
         outer.pack(fill="both", expand=True)
         ttk.Label(outer, text="Plano Local", style="Heading.TLabel").pack(anchor="w")
         ttk.Label(outer, text="Uma próxima ação para cada projeto. Tudo salvo neste computador.").pack(anchor="w", pady=(4, 20))
+        reminder_bar = ttk.Frame(outer)
+        reminder_bar.pack(fill="x", pady=(0, 12))
+        self.reminder = ttk.Label(reminder_bar, text="", wraplength=680)
+        self.reminder.pack(side="left", fill="x", expand=True)
+        ttk.Button(reminder_bar, text="Agenda e alertas", command=self.open_agenda).pack(side="right")
         columns = ttk.Panedwindow(outer, orient="horizontal")
         columns.pack(fill="both", expand=True)
         left, right = ttk.Frame(columns), ttk.Frame(columns, padding=(20, 0, 0, 0))
         columns.add(left, weight=1)
         columns.add(right, weight=3)
         ttk.Button(left, text="+ Novo projeto", command=self.new_project).pack(fill="x", pady=(0, 10))
+        self.edit_project_button = ttk.Button(left, text="Editar projeto / descrição", command=self.edit_project, state="disabled")
+        self.edit_project_button.pack(fill="x", pady=(0, 10))
         self.projects = ttk.Treeview(left, show="tree", selectmode="browse", height=10)
         self.projects.column("#0", width=230, minwidth=150)
         self.projects.pack(fill="both", expand=True)
@@ -63,11 +73,72 @@ class App:
         self.tasks.bind("<Double-1>", lambda event: self.edit_task())
         ttk.Label(outer, text="Prazos vencidos aparecem em vermelho. Clique duas vezes em uma tarefa para editar.").pack(anchor="w", pady=(16, 0))
         self.reload_projects()
+        self.check_reminders()
+        self.reminder_timer = root.after(60000, self.poll_reminders)
+
+    def check_reminders(self):
+        tasks = self.store.due_soon()
+        today = date.today().isoformat()
+        overdue = sum(task["due"] < today for task in tasks)
+        upcoming = len(tasks) - overdue
+        self.reminder.configure(
+            text=f"Alertas: {overdue} atrasada(s) · {upcoming} vencendo hoje ou amanhã."
+                 if tasks else "Nenhum prazo pendente até amanhã.",
+            foreground="#a52b24" if tasks else "#266346",
+        )
+        keys = {(task["id"], task["due"], today) for task in tasks}
+        if keys - self.notified:
+            self.root.bell()
+        self.notified = keys
+        if self.agenda_window is not None and self.agenda_window.winfo_exists():
+            self.refresh_agenda()
+
+    def poll_reminders(self):
+        self.check_reminders()
+        if self.project_id is not None:
+            self.refresh_tasks()
+        self.reminder_timer = self.root.after(60000, self.poll_reminders)
+
+    def open_agenda(self):
+        if self.agenda_window is not None and self.agenda_window.winfo_exists():
+            self.agenda_window.lift()
+            return
+        window = self.agenda_window = tk.Toplevel(self.root)
+        window.title("Agenda — todos os projetos")
+        window.geometry("850x450")
+        window.minsize(650, 350)
+        body = ttk.Frame(window, padding=20)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text="Tarefas pendentes por prazo", font=("Segoe UI", 16, "bold")).pack(anchor="w")
+        ttk.Label(body, text="Alertas visuais e som ao abrir e durante o uso. O aplicativo precisa estar aberto.", wraplength=740).pack(anchor="w", pady=(8, 12))
+        frame = ttk.Frame(body)
+        frame.pack(fill="both", expand=True)
+        self.agenda_tree = ttk.Treeview(frame, columns=("due", "when", "project", "title"), show="headings")
+        for key, label, width in (("due", "Prazo", 100), ("when", "Quando", 100), ("project", "Projeto", 180), ("title", "Tarefa", 300)):
+            self.agenda_tree.heading(key, text=label)
+            self.agenda_tree.column(key, width=width, minwidth=80)
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.agenda_tree.yview)
+        self.agenda_tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        self.agenda_tree.pack(fill="both", expand=True)
+        self.agenda_tree.tag_configure("urgent", foreground="#a52b24")
+        self.agenda_empty = ttk.Label(body, text="")
+        self.agenda_empty.pack(anchor="w", pady=(8, 0))
+        self.refresh_agenda()
+
+    def refresh_agenda(self):
+        self.agenda_tree.delete(*self.agenda_tree.get_children())
+        tasks = self.store.agenda()
+        for task in tasks:
+            days = (date.fromisoformat(task["due"]) - date.today()).days
+            when = "Atrasada" if days < 0 else "Hoje" if days == 0 else "Amanhã" if days == 1 else f"Em {days} dias"
+            self.agenda_tree.insert("", "end", values=(task["due"], when, task["project_name"], task["title"]), tags=("urgent",) if days <= 1 else ())
+        self.agenda_empty.configure(text="Nenhuma tarefa pendente com prazo definido." if not tasks else f"{len(tasks)} tarefa(s) com prazo. Concluídas e sem prazo não aparecem aqui.")
 
     def reload_projects(self):
         self.projects.delete(*self.projects.get_children())
         for project in self.store.projects():
-            self.projects.insert("", "end", iid=str(project["id"]), text=f'{project["name"]}  ·  {project["done"]}/{project["total"]}')
+            self.projects.insert("", "end", iid=str(project["id"]), text=f'{project["name"]}  ·  {self.store.completion(project):.0f}%')
         if self.project_id is not None:
             self.projects.selection_set(str(self.project_id))
 
@@ -81,7 +152,8 @@ class App:
     def refresh_tasks(self):
         project = next(p for p in self.store.projects() if p["id"] == self.project_id)
         self.heading.configure(text=project["name"])
-        self.description.configure(text=project["description"])
+        self.description.configure(text="Descrição: " + (project["description"] or "Adicione uma descrição em Editar projeto / descrição."))
+        self.edit_project_button.configure(state="normal")
         self.add.configure(state="normal")
         self.tasks.delete(*self.tasks.get_children())
         rows = self.store.tasks(self.project_id)
@@ -90,8 +162,9 @@ class App:
             late = bool(task["due"] and task["due"] < date.today().isoformat() and task["status"] != "Concluída")
             overdue += late
             self.tasks.insert("", "end", iid=str(task["id"]), values=(task["title"], task["due"] or "Sem prazo", task["status"]), tags=("late",) if late else ())
-        self.progress["value"] = 100 * project["done"] / project["total"] if project["total"] else 0
-        self.summary.configure(text=f'{project["done"]} de {project["total"]} tarefas concluídas · {overdue} com prazo vencido')
+        percent = self.store.completion(project)
+        self.progress["value"] = percent
+        self.summary.configure(text=f'{percent:.0f}% concluído · {project["done"]} de {project["total"]} tarefas · {overdue} atrasada(s)')
 
     def dialog(self, title, fields, save):
         window = tk.Toplevel(self.root)
@@ -106,29 +179,41 @@ class App:
         for label, value, options in fields:
             ttk.Label(body, text=label).pack(anchor="w", pady=(8, 3))
             variable = tk.StringVar(value=value)
-            widget = ttk.Combobox(body, textvariable=variable, values=options, state="readonly", width=48) if options else ttk.Entry(body, textvariable=variable, width=51)
+            if options == "multiline":
+                widget = tk.Text(body, width=51, height=5, wrap="word", font=("Segoe UI", 10))
+                widget.insert("1.0", value)
+                variables.append(lambda widget=widget: widget.get("1.0", "end-1c"))
+            else:
+                widget = ttk.Combobox(body, textvariable=variable, values=options, state="readonly", width=48) if options else ttk.Entry(body, textvariable=variable, width=51)
+                variables.append(variable.get)
             widget.pack(fill="x")
-            variables.append(variable)
             first = first or widget
         def submit():
             try:
-                save(*(v.get() for v in variables))
-            except (ValueError, OSError) as error:
+                save(*(getter() for getter in variables))
+            except (ValueError, OSError, sqlite3.Error) as error:
                 messagebox.showerror("Não foi possível salvar", str(error), parent=window)
                 return
             window.destroy()
             self.reload_projects()
             if self.project_id is not None:
                 self.refresh_tasks()
+            self.check_reminders()
         ttk.Button(body, text="Salvar", command=submit).pack(anchor="e", pady=(20, 0))
         window.bind("<Escape>", lambda event: window.destroy())
-        window.bind("<Return>", lambda event: submit())
+        window.bind("<Return>", lambda event: None if isinstance(event.widget, tk.Text) else submit())
         first.focus_set()
 
     def new_project(self):
         def save(name, description):
             self.project_id = self.store.add_project(name, description)
-        self.dialog("Novo projeto", [("Nome", "", None), ("Objetivo", "", None)], save)
+        self.dialog("Novo projeto", [("Nome", "", None), ("Descrição do projeto", "", "multiline")], save)
+
+    def edit_project(self):
+        if self.project_id is None:
+            return
+        project = next(p for p in self.store.projects() if p["id"] == self.project_id)
+        self.dialog("Editar projeto", [("Nome", project["name"], None), ("Descrição do projeto", project["description"], "multiline")], lambda name, description: self.store.update_project(self.project_id, name, description))
 
     def new_task(self):
         if self.project_id is not None:
