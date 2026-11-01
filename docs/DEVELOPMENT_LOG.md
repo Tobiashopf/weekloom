@@ -73,3 +73,9 @@ Initial owner feedback has been received (see below). Feature acceptance, visual
 - All 31 automated tests passed, including full round trips, recovery contents, invalid files, simulated write failures, failed recovery-copy creation and interrupted backup publication.
 - GUI smoke checks passed for backup creation, cancellation and confirmed restoration using temporary test data.
 - No restoration of the owner's real data was performed. Owner acceptance of backup/restore remains pending.
+
+## November 1, 2026 — Backup/restore owner acceptance
+
+- The owner reported that the proposed backup/restore exercise was completed and worked successfully.
+- Recorded the basic flow as owner-confirmed. No separate claim is made about the optional reversal through the recovery copy or exhaustive field-by-field verification.
+- Updated acceptance documentation only; application code is unchanged and the passing automated checks from the implementation remain applicable.

@@ -40,7 +40,7 @@ The notification ledger is part of the restored snapshot. If an older snapshot p
 
 Automated tests cover full-table round trips and persistence after reopening, recovery-copy contents, invalid/corrupt files, unknown format versions, bad references, cycles, invalid dates and estimates, duplicate IDs, simulated mid-restore failure, unavailable recovery storage, source-file changes and failed backup publication. GUI checks cover creating a file, cancelling a restore and confirming a restore.
 
-Owner acceptance of this feature is pending. No restoration of the owner's real data was performed during development tests.
+The owner reported that the proposed backup/restore exercise was completed successfully. This is owner-reported acceptance of the basic flow, not independent verification of every field or failure scenario. No restoration of the owner's real data was performed by the assistant during development tests.
 
 ## Acceptance exercise
 

@@ -75,4 +75,4 @@ Results for this iteration: pending. Native background reminder activation is no
 
 Update: the owner explicitly confirmed that the test notification appeared and scheduler status was active without errors. Record these two checks as owner-confirmed; timed delivery with the app closed remains unreported.
 
-Next acceptance exercise: follow [backup and recovery](BACKUPS.md) using a temporary project after first creating a backup. Results remain pending.
+Backup/restore acceptance: the owner reported that the proposed [backup and recovery](BACKUPS.md) exercise was completed successfully. The basic flow is owner-confirmed. The optional recovery-copy reversal and individual field comparisons were not separately reported.
