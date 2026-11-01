@@ -69,8 +69,32 @@ with tempfile.TemporaryDirectory() as temp:
         app.move_week(None)
         assert len(app.week_tree.get_children()) == 1
         assert app.capacity_var.get() == "2"
+        checklist_task = store.add_task(project, "Checklist task")
+        app.refresh_tasks()
+        app.tasks.selection_set(str(checklist_task))
+        app.open_checklist()
+        root.update()
+        checklist_window = next(w for w in root.winfo_children() if isinstance(w, tk.Toplevel) and w.title() == "Subtarefas")
+        body = checklist_window.winfo_children()[0]
+        entry = next(w for w in body.winfo_children() if isinstance(w, ttk.Entry))
+        entry.insert(0, "Example step")
+        controls = next(w for w in body.winfo_children() if isinstance(w, ttk.Frame))
+        next(w for w in controls.winfo_children() if w.cget("text") == "Adicionar").invoke()
+        tree = next(w for w in body.winfo_children() if isinstance(w, ttk.Treeview))
+        assert len(tree.get_children()) == 1
+        tree.selection_set(tree.get_children()[0])
+        next(w for w in controls.winfo_children() if w.cget("text") == "Marcar / desmarcar").invoke()
+        assert store.checklist(checklist_task)[0]["done"] == 1
+        checklist_window.destroy()
+        app.configure_reminder()
+        root.update()
+        dialog = next(w for w in root.winfo_children() if isinstance(w, tk.Toplevel) and w.title() == "Lembrete personalizado")
+        body = dialog.winfo_children()[0]
+        next(w for w in body.winfo_children() if isinstance(w, ttk.Entry)).insert(0, "2030-01-01 10:30")
+        next(w for w in body.winfo_children() if isinstance(w, ttk.Button)).invoke()
+        assert next(t for t in store.tasks(project) if t["id"] == checklist_task)["reminder_at"] == "2030-01-01 10:30"
         root.after_cancel(app.reminder_timer)
-        print("GUI smoke check passed: agenda, alerts, descriptions, progress, task planning and weekly capacity/navigation.")
+        print("GUI smoke check passed: agenda, alerts, descriptions, progress, planning, weekly capacity, checklist and custom reminder dialog.")
     finally:
         root.destroy()
         store.close()

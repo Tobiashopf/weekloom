@@ -61,3 +61,14 @@ The owner did not report specific test steps or an activity name. These details 
 Follow-up result: the owner reported that the iteration worked. Individual checklist outcomes were not supplied. The owner then requested a more substantial product direction and agreed to weekly execution planning.
 
 The next acceptance scenario is documented in [WEEKLY_PLANNING.md](WEEKLY_PLANNING.md). Its results remain pending.
+
+Update: the owner subsequently reported that the weekly-planning iteration was checked and requested the next stages. No individual outcomes or screenshots were supplied.
+
+## Checklist and reminder acceptance
+
+1. Select a pending task, open **Subtarefas**, add two steps and mark only one complete.
+2. Verify the parent cannot be completed until the second step is checked.
+3. Complete the parent, then verify an item cannot be unchecked until the parent is reopened.
+4. Follow [Windows reminder setup and verification](WINDOWS_REMINDERS.md) from a normal Windows session.
+
+Results for this iteration: pending. Native background reminder activation is not yet verified.

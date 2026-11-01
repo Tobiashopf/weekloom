@@ -49,3 +49,16 @@ Initial owner feedback has been received (see below). Feature acceptance, visual
 - All 16 automated tests passed after the fix, including legacy-data preservation, backup-once behavior, planning persistence, weekly boundaries, invalid inputs, dependencies and progress calculations.
 - The GUI smoke check passed, including planning dialog submission, weekly overload display, navigation and stored capacity, as well as the earlier agenda/description/progress checks.
 - Documentation is in English. Owner acceptance and visual/accessibility review of this iteration remain pending.
+
+## November 1, 2026 — Checklists and optional Windows reminders
+
+- The owner reported that the weekly-planning iteration had been checked and requested the next stages. Individual test results were not supplied.
+- Added persistent subtask checklists with add, toggle and confirmed removal actions. Incomplete items prevent parent completion; completed parents must be reopened before introducing unfinished items. Blocked parents cannot execute checklist steps.
+- Added optional local reminder timestamps, a default daily 09:00 cutoff, completed-task exclusion and a persistent delivery ledger. Failed delivery requests remain retryable.
+- Added a background worker, native Windows notification adapter and optional Task Scheduler registration, removal and status controls.
+- Native integration encountered environment restrictions: PowerShell script execution was disabled and the CIM-based scheduling interface was unavailable. The implementation was changed to native notification APIs and the scheduler command-line interface without changing system security policy.
+- Command-line registration initially hit the `/TR` length limit for the development paths. XML registration removed that input-length problem. Actual registration still failed with a Windows "invalid network address" error in this environment. Native notification-area requests were also rejected. No successful activation or visible popup is claimed.
+- Added a development-computer CMD launcher outside the repository so the owner can launch in the normal Windows session for integration testing.
+- All 24 automated tests passed. A test fixture was shortened to avoid the host's filesystem path limit; paths with spaces and XML-special characters remain covered.
+- GUI smoke checks passed for the checklist and custom reminder dialog, along with existing planning flows.
+- Owner acceptance of checklists and end-to-end Windows notification validation remain pending. These are explicit remaining tasks, not completed release features.

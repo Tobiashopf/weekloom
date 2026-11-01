@@ -3,6 +3,8 @@ import argparse
 from datetime import date, timedelta
 import os
 import sqlite3
+import subprocess
+import sys
 from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -45,6 +47,7 @@ class App:
         ttk.Button(left, text="+ Novo projeto", command=self.new_project).pack(fill="x", pady=(0, 10))
         self.edit_project_button = ttk.Button(left, text="Editar projeto / descrição", command=self.edit_project, state="disabled")
         self.edit_project_button.pack(fill="x", pady=(0, 10))
+        ttk.Button(left, text="Notificações do Windows", command=self.open_notification_settings).pack(fill="x", pady=(0, 10))
         self.projects = ttk.Treeview(left, show="tree", selectmode="browse", height=10)
         self.projects.column("#0", width=230, minwidth=150)
         self.projects.pack(fill="both", expand=True)
@@ -65,6 +68,8 @@ class App:
         self.add.pack(side="left")
         ttk.Button(toolbar, text="Editar tarefa", command=self.edit_task).pack(side="left", padx=8)
         ttk.Button(toolbar, text="Planejar tarefa", command=self.plan_task).pack(side="left")
+        ttk.Button(toolbar, text="Subtarefas", command=self.open_checklist).pack(side="left", padx=8)
+        ttk.Button(toolbar, text="Lembrete", command=self.configure_reminder).pack(side="left")
         frame = ttk.Frame(right)
         frame.pack(fill="both", expand=True)
         self.tasks = ttk.Treeview(frame, columns=("title", "due", "status"), show="headings", selectmode="browse")
@@ -208,7 +213,7 @@ class App:
         body = ttk.Frame(window, padding=20)
         body.pack(fill="both", expand=True)
         ttk.Label(body, text="Tarefas pendentes por prazo", font=("Segoe UI", 16, "bold")).pack(anchor="w")
-        ttk.Label(body, text="Alertas visuais e som ao abrir e durante o uso. O aplicativo precisa estar aberto.", wraplength=740).pack(anchor="w", pady=(8, 12))
+        ttk.Label(body, text="Os alertas desta janela funcionam durante o uso. Para avisos com ela fechada, ative Notificações do Windows.", wraplength=740).pack(anchor="w", pady=(8, 12))
         frame = ttk.Frame(body)
         frame.pack(fill="both", expand=True)
         self.agenda_tree = ttk.Treeview(frame, columns=("due", "when", "project", "title"), show="headings")
@@ -248,6 +253,7 @@ class App:
         self.refresh_tasks()
 
     def refresh_tasks(self):
+        selection = self.tasks.selection()
         project = next(p for p in self.store.projects() if p["id"] == self.project_id)
         self.heading.configure(text=project["name"])
         self.description.configure(text="Descrição: " + (project["description"] or "Adicione uma descrição em Editar projeto / descrição."))
@@ -261,6 +267,9 @@ class App:
             overdue += late
             blocked = self.store.blockers(task["id"])
             self.tasks.insert("", "end", iid=str(task["id"]), values=(task["title"], task["due"] or "Sem prazo", "Bloqueada" if blocked else task["status"]), tags=("late",) if late or blocked else ())
+        for item_id in selection:
+            if self.tasks.exists(item_id):
+                self.tasks.selection_set(item_id)
         percent = self.store.completion(project)
         self.progress["value"] = percent
         self.summary.configure(text=f'{percent:.0f}% concluído · {project["done"]} de {project["total"]} tarefas · {overdue} atrasada(s)')
@@ -343,6 +352,106 @@ class App:
             return
         task = next(t for t in self.store.tasks(self.project_id) if str(t["id"]) == selected[0])
         self.dialog("Editar tarefa", [("Título", task["title"], None), ("Prazo opcional (AAAA-MM-DD)", task["due"] or "", None), ("Status", task["status"], STATUSES)], lambda title, due, status: self.store.update_task(task["id"], title, due, status))
+
+    def open_checklist(self):
+        selected = self.tasks.selection()
+        if not selected:
+            messagebox.showinfo("Subtarefas", "Selecione uma tarefa primeiro.", parent=self.root)
+            return
+        task_id = int(selected[0])
+        window = tk.Toplevel(self.root)
+        window.title("Subtarefas")
+        window.geometry("580x420")
+        body = ttk.Frame(window, padding=20)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text="Conclua os itens antes de finalizar a tarefa principal.", wraplength=500).pack(anchor="w")
+        title = tk.StringVar()
+        ttk.Entry(body, textvariable=title).pack(fill="x", pady=10)
+        tree = ttk.Treeview(body, columns=("title", "done"), show="headings", selectmode="browse")
+        tree.heading("title", text="Subtarefa")
+        tree.heading("done", text="Concluída")
+        tree.column("title", width=350)
+        tree.column("done", width=90)
+        summary = ttk.Label(body, text="")
+        def refresh():
+            tree.delete(*tree.get_children())
+            items = self.store.checklist(task_id)
+            for item in items:
+                tree.insert("", "end", iid=str(item["id"]), values=(item["title"], "Sim" if item["done"] else "Não"))
+            summary.configure(text=f'{sum(item["done"] for item in items)}/{len(items)} itens concluídos. O status da tarefa é alterado manualmente.')
+        def act(action):
+            try:
+                action()
+                refresh()
+            except (ValueError, sqlite3.Error) as error:
+                messagebox.showerror("Subtarefas", str(error), parent=window)
+        def add():
+            self.store.add_checklist_item(task_id, title.get())
+            title.set("")
+        def toggle():
+            if tree.selection():
+                item = next(i for i in self.store.checklist(task_id) if str(i["id"]) == tree.selection()[0])
+                self.store.set_checklist_item(item["id"], not item["done"])
+        def remove():
+            if tree.selection() and messagebox.askyesno("Excluir subtarefa", "Excluir o item selecionado?", parent=window):
+                self.store.delete_checklist_item(int(tree.selection()[0]))
+        actions = ttk.Frame(body)
+        actions.pack(fill="x", pady=(0, 10))
+        ttk.Button(actions, text="Adicionar", command=lambda: act(add)).pack(side="left")
+        ttk.Button(actions, text="Marcar / desmarcar", command=lambda: act(toggle)).pack(side="left", padx=6)
+        ttk.Button(actions, text="Excluir", command=lambda: act(remove)).pack(side="left")
+        tree.pack(fill="both", expand=True)
+        summary.pack(anchor="w", pady=(8, 0))
+        tree.bind("<Double-1>", lambda event: act(toggle))
+        refresh()
+
+    def configure_reminder(self):
+        selected = self.tasks.selection()
+        if not selected:
+            messagebox.showinfo("Lembrete", "Selecione uma tarefa primeiro.", parent=self.root)
+            return
+        task = next(t for t in self.store.tasks(self.project_id) if str(t["id"]) == selected[0])
+        self.dialog("Lembrete personalizado", [("Data e hora local (AAAA-MM-DD HH:MM); vazio usa alerta diário", task["reminder_at"] or "", None)], lambda value: self.store.set_reminder(task["id"], value))
+
+    def open_notification_settings(self):
+        window = tk.Toplevel(self.root)
+        window.title("Notificações do Windows")
+        body = ttk.Frame(window, padding=20)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text="Verifica lembretes a cada 5 minutos, com sua sessão do Windows iniciada.\nFunciona com a janela fechada; não funciona com o computador desligado.\nSem horário personalizado: alerta diário após 09:00 para prazos até amanhã.\nAs configurações de notificações do Windows podem ocultar os avisos.", wraplength=570).pack(anchor="w", pady=(0, 12))
+        status = ttk.Label(body, text="", wraplength=570)
+        buttons = []
+        def run(mode):
+            if sys.platform != "win32":
+                status.configure(text="Disponível somente no Windows.")
+                return
+            args = [sys.executable, str(Path(__file__).parent / "reminder_setup.py"), mode, "--data", str(self.store.path)]
+            if mode == "Test":
+                args = [sys.executable, str(Path(__file__).parent / "notifications.py"), "--test"]
+            try:
+                process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, creationflags=subprocess.CREATE_NO_WINDOW)
+            except OSError as error:
+                status.configure(text=str(error))
+                return
+            for button in buttons:
+                button.configure(state="disabled")
+            status.configure(text="Verificando…")
+            def poll():
+                if process.poll() is None:
+                    self.root.after(250, poll)
+                    return
+                out, err = process.communicate()
+                if window.winfo_exists():
+                    status.configure(text=(out.strip() if process.returncode == 0 else "Falha: " + err.strip())[-1500:])
+                    for button in buttons:
+                        button.configure(state="normal")
+            poll()
+        for label, mode in (("Ativar", "Install"), ("Desativar", "Remove"), ("Consultar estado", "Status"), ("Testar aviso", "Test")):
+            button = ttk.Button(body, text=label, command=lambda mode=mode: run(mode))
+            button.pack(fill="x", pady=3)
+            buttons.append(button)
+        status.pack(anchor="w", pady=(12, 0))
+        run("Status")
 
 
 def main():

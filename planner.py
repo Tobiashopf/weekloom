@@ -1,5 +1,5 @@
 """Local persistence for a personal project planner. Standard library only."""
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 import sqlite3
 import math
@@ -12,6 +12,7 @@ STATUSES = ("A fazer", "Em andamento", "Concluída")
 class Planner:
     def __init__(self, path):
         path = Path(path)
+        self.path = path.resolve()
         path.parent.mkdir(parents=True, exist_ok=True)
         self.db = sqlite3.connect(path)
         self.db.row_factory = sqlite3.Row
@@ -42,6 +43,22 @@ class Planner:
                 self.db.execute("ALTER TABLE tasks ADD COLUMN depends_on INTEGER REFERENCES tasks(id)")
         self.db.execute("CREATE TABLE IF NOT EXISTS weekly_capacity (week TEXT PRIMARY KEY, hours REAL NOT NULL)")
         self.db.commit()
+        if "reminder_at" not in {r["name"] for r in self.db.execute("PRAGMA table_info(tasks)")}:
+            if self.db.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]:
+                with closing(sqlite3.connect(path.with_name(path.stem + ".pre-reminders-" + uuid4().hex[:8] + ".sqlite3"))) as target:
+                    self.db.backup(target)
+            with self.db:
+                self.db.execute("BEGIN")
+                self.db.execute("ALTER TABLE tasks ADD COLUMN reminder_at TEXT")
+        self.db.executescript("""
+            CREATE TABLE IF NOT EXISTS checklist (
+                id INTEGER PRIMARY KEY, task_id INTEGER NOT NULL REFERENCES tasks(id),
+                title TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0 CHECK(done IN (0, 1))
+            );
+            CREATE TABLE IF NOT EXISTS notification_log (
+                event_key TEXT PRIMARY KEY, sent_at TEXT NOT NULL
+            );
+        """)
 
     @staticmethod
     def required(text):
@@ -205,6 +222,8 @@ class Planner:
     def update_task(self, task_id, title, due, status):
         if status not in STATUSES:
             raise ValueError("Status inválido.")
+        if status == "Concluída" and any(not item["done"] for item in self.checklist(task_id)):
+            raise ValueError("Conclua todas as subtarefas antes de concluir a tarefa.")
         if status != "A fazer" and self.blockers(task_id):
             raise ValueError("Conclua a tarefa anterior antes de iniciar ou concluir esta tarefa.")
         if status != "Concluída" and self.db.execute(
@@ -217,6 +236,68 @@ class Planner:
             )
             if cursor.rowcount != 1:
                 raise ValueError("Tarefa não encontrada.")
+
+    def checklist(self, task_id):
+        return self.db.execute("SELECT * FROM checklist WHERE task_id = ? ORDER BY id", (task_id,)).fetchall()
+
+    def add_checklist_item(self, task_id, title):
+        task = self.db.execute("SELECT status FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        if task is None or task["status"] == "Concluída":
+            raise ValueError("Selecione uma tarefa pendente; reabra tarefas concluídas antes de adicionar subtarefas.")
+        with self.db:
+            return self.db.execute("INSERT INTO checklist(task_id, title) VALUES (?, ?)", (task_id, self.required(title))).lastrowid
+
+    def set_checklist_item(self, item_id, done):
+        item = self.db.execute("SELECT c.*, t.status FROM checklist c JOIN tasks t ON t.id = c.task_id WHERE c.id = ?", (item_id,)).fetchone()
+        if item is None:
+            raise ValueError("Subtarefa não encontrada.")
+        if not done and item["status"] == "Concluída":
+            raise ValueError("Reabra a tarefa antes de desmarcar uma subtarefa.")
+        if done and self.blockers(item["task_id"]):
+            raise ValueError("Conclua a dependência antes de executar esta subtarefa.")
+        with self.db:
+            self.db.execute("UPDATE checklist SET done = ? WHERE id = ?", (int(bool(done)), item_id))
+
+    def delete_checklist_item(self, item_id):
+        with self.db:
+            self.db.execute("DELETE FROM checklist WHERE id = ?", (item_id,))
+
+    def set_reminder(self, task_id, value):
+        value = value.strip()
+        if value:
+            try:
+                parsed = datetime.strptime(value, "%Y-%m-%d %H:%M")
+                if parsed.strftime("%Y-%m-%d %H:%M") != value:
+                    raise ValueError()
+            except ValueError:
+                raise ValueError("Use uma data e hora válidas: AAAA-MM-DD HH:MM.") from None
+        with self.db:
+            cursor = self.db.execute("UPDATE tasks SET reminder_at = ? WHERE id = ?", (value or None, task_id))
+            if cursor.rowcount != 1:
+                raise ValueError("Tarefa não encontrada.")
+
+    def pending_notifications(self, now=None):
+        """Return unsent local-time events; custom reminders fire once, defaults daily after 09:00."""
+        now = now or datetime.now()
+        sent = {row[0] for row in self.db.execute("SELECT event_key FROM notification_log")}
+        events = []
+        for task in self.db.execute("SELECT * FROM tasks WHERE status != 'Concluída'"):
+            if task["reminder_at"]:
+                if datetime.strptime(task["reminder_at"], "%Y-%m-%d %H:%M") > now:
+                    continue
+                key = f'{task["id"]}:custom:{task["reminder_at"]}'
+            else:
+                if now.hour < 9 or not task["due"] or task["due"] > (now.date() + timedelta(days=1)).isoformat():
+                    continue
+                key = f'{task["id"]}:due:{task["due"]}:{now.date().isoformat()}'
+            if key not in sent:
+                events.append(key)
+        return events
+
+    def record_notifications(self, events, now=None):
+        with self.db:
+            self.db.executemany("INSERT OR IGNORE INTO notification_log VALUES (?, ?)",
+                                [(key, (now or datetime.now()).isoformat()) for key in events])
 
     def close(self):
         self.db.close()

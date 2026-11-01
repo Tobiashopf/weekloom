@@ -1,6 +1,6 @@
 # Development roadmap
 
-Initial owner feedback has been received. The owner reported the agenda/progress/description iteration worked and agreed to develop a weekly execution planner. Effort estimates, execution dates, single-prerequisite dependencies and weekly capacity are now implemented and await owner acceptance. Remaining estimates below are provisional: 24–36 hours. They are planning estimates, not measured or billable hours.
+The owner reported that weekly execution planning was checked. Subtask checklists and reminder rules are now implemented; native Windows activation remains unverified. Remaining estimates below are provisional: 23–35 hours, excluding Windows integration troubleshooting whose scope is not yet known. These are planning estimates, not measured or billable hours.
 
 | Task | Execution steps | Acceptance criteria | Estimate |
 |---|---|---|---|
@@ -9,7 +9,7 @@ Initial owner feedback has been received. The owner reported the agenda/progress
 | Search and filters | Define status/deadline filters; implement controls; test combinations | Find tasks without changing data or mixing projects | 3–4 h |
 | Backup and restore | Create consistent copies; validate format; protect original data; test failures | Restore projects and tasks; reject invalid files | 4–6 h |
 | Export and import | Define versioned JSON; validate input; handle conflicts; test round trips | Preserve content, relationships and statuses | 4–6 h |
-| Subtask checklists and multiple prerequisites | Define checklist semantics; extend the dependency model and editor; test combinations | Checklist completion is useful and multiple prerequisites preserve cycle protection; single-prerequisite support is already implemented | 3–5 h |
+| Multiple prerequisites | Extend the dependency model and editor; test combinations and migration | Multiple prerequisites preserve cycle protection; checklist and single-prerequisite support are already implemented | 2–4 h |
 | Accessibility and interface | Review keyboard, focus, contrast and resizing; fix issues; validate | Core workflows work with keyboard and varied window sizes | 3–4 h |
 | Packaging and release | Package for Windows; test clean installation; document upgrades | Reproducible distributable with verified instructions | 4–6 h |
 
@@ -17,7 +17,7 @@ Initial owner feedback has been received. The owner reported the agenda/progress
 
 Follow [the user acceptance checklist](docs/USER_ACCEPTANCE.md). Record actual observations before marking items complete. Select the next implementation priority from that feedback.
 
-Implemented from feedback: chronological agenda, in-app date-based alerts, numeric progress, editable multiline descriptions, effort estimates, execution dates, single prerequisites, weekly capacity and effort-weighted progress. Follow-up not yet estimated: time-of-day reminders and native Windows notifications while the application is closed. A scheduling design and operating-system validation are still needed.
+Implemented from feedback: chronological agenda, in-app alerts, numeric progress, descriptions, effort estimates, execution dates, single prerequisites, weekly capacity, effort-weighted progress, checklists and reminder timestamps. Immediate integration work: activate the optional Windows task and verify visible notifications with the application closed. The current assistant environment could not complete that validation; follow docs/WINDOWS_REMINDERS.md from the normal Windows session.
 
 ## Submission preparation
 

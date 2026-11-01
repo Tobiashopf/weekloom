@@ -48,4 +48,4 @@ Owner acceptance of this iteration: pending. Automated checks are recorded in th
 
 ## Follow-up work
 
-Subtask checklists, multiple prerequisites, actual-versus-estimated time, time-of-day reminders and closed-app Windows notifications are still future work. Prioritize these using real-use feedback.
+Subtask checklists and reminder timestamp rules are now implemented. Closed-app Windows notification integration has been added but still requires activation and end-to-end validation in a normal Windows session. Multiple prerequisites and actual-versus-estimated time remain future work.

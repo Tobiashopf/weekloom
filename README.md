@@ -30,7 +30,7 @@ Choose **Novo projeto**, enter a name and objective, then choose **Nova tarefa**
 
 Choose **Editar projeto / descrição** to update a project's name and multiline description. Existing objectives are preserved as descriptions.
 
-Choose **Agenda e alertas** to see unfinished tasks with deadlines across all projects. Alerts include overdue tasks and deadlines today or tomorrow, using the computer's local date. A banner and system bell signal these deadlines at startup and while the application is open; checks run every minute and after saves. Sound depends on system settings. No Windows notification service or closed-app/background reminder is installed.
+Choose **Agenda e alertas** to see unfinished tasks with deadlines across all projects. In-app alerts include overdue tasks and deadlines today or tomorrow, using the computer's local date. A banner and system bell signal these deadlines at startup and while the application is open; checks run every minute and after saves. Sound depends on system settings. Optional closed-app Windows reminders are described below; they are not enabled automatically on startup.
 
 Project completion is completed tasks divided by all tasks, shown as a rounded whole percentage. All tasks have equal weight; in-progress tasks do not receive partial credit. Empty projects show 0%. Adding or reopening tasks can reduce the percentage.
 
@@ -49,6 +49,20 @@ The project view also shows effort-weighted completion once every task has an es
 See [weekly planning rules and acceptance steps](docs/WEEKLY_PLANNING.md). When upgrading a database containing existing tasks, the application saves a `*.pre-planning-*.sqlite3` copy next to it before adding planning fields. The copy is a migration safeguard, not a user-facing backup/restore feature. Existing tasks start with no estimate, execution date or prerequisite.
 
 ## Verify
+
+### Subtask checklists
+
+Select a task and choose **Subtarefas**. Add steps, mark/unmark them, or remove an item after confirmation. All remaining items must be checked before the parent task can be completed. A finished parent must be reopened before adding an unchecked item or unchecking an existing item. Blocked tasks cannot execute checklist steps. Checking all items does not automatically complete the parent. Checklist items do not add separate weight to project progress or weekly effort.
+
+### Optional Windows background reminders
+
+Select a task and choose **Lembrete** to enter a local date and time (`YYYY-MM-DD HH:MM`). A custom reminder is sent once when that time is reached. Clearing it restores the default daily rule: after 09:00, unfinished tasks due by tomorrow qualify for a reminder. Completed tasks do not qualify.
+
+Open **Notificações do Windows** to activate, deactivate, query the schedule or request a test notification. The background worker checks every five minutes while the user is signed in, even when the application window is closed. Windows notification settings may suppress visible popups. No administrator account or password is requested. Paths to Python, the project and the database must remain available.
+
+**Integration status:** business rules and interface checks pass, but native notification display and scheduled-task registration could not be validated in the assistant's execution environment. Background reminders have not been activated there. Run the application directly from your normal Windows session before testing these controls. For this development computer, `Launch-PlanoLocal.cmd` is supplied outside the repository. See [setup, limitations and verification](docs/WINDOWS_REMINDERS.md).
+
+### Automated checks
 
 ```sh
 python -m unittest discover -s tests -v
