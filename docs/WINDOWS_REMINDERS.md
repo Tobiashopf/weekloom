@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented, with end-to-end Windows activation and visual delivery still unverified. The assistant environment rejected native notification-area requests and could not access the Windows Task Scheduler. No successful scheduled-task registration was observed, and background reminders must not be represented as enabled.
+The owner confirmed that the test notification appeared and **Consultar estado** showed an active schedule without errors in the normal Windows session. This is owner-reported verification, not a direct observation by the assistant. The assistant environment still cannot access the native notification area or scheduler. Timed delivery with the application closed, sleep/battery behavior and deactivation have not been separately confirmed.
 
 ## Setup in a normal Windows session
 
@@ -40,7 +40,7 @@ Implemented, with end-to-end Windows activation and visual delivery still unveri
 
 Automated checks cover checklist state rules, reminder time validation, daily cutoff, custom scheduling, rescheduling, completion exclusion, persistent deduplication, retry after failed delivery, missing database handling and XML task definition properties. GUI smoke checks cover checklist actions and saving a custom timestamp.
 
-Still required: registration in the normal Windows session, popup visibility, closed-app execution, battery/sleep behavior, removal verification and an installed release test. These are not replaced by unit tests.
+Owner-confirmed: test popup visibility and active schedule status. Still required: timed closed-app execution, battery/sleep behavior, removal verification and an installed release test. These are not replaced by unit tests.
 
 ## Platform references
 

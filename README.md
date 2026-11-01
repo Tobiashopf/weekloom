@@ -8,7 +8,7 @@ The project is evolving into a weekly execution planner: assign work to a day, e
 
 Initial working prototype, started November 1, 2026. No established user base or long-term usage is claimed. The interface is in Brazilian Portuguese.
 
-Implemented: project creation and editing, multiline project descriptions, task creation and editing, three task statuses, deadlines, overdue highlighting, percentage progress, an agenda across projects, in-app deadline alerts and persistent local storage. Archiving, deletion, backups and export are not implemented yet.
+Implemented: project creation and editing, multiline descriptions, tasks and checklists, deadlines, percentage progress, effort estimates, dependencies, weekly planning, in-app alerts, optional Windows reminders, local storage and versioned backup/restore. Project archiving, project deletion and selective import/export are not implemented yet.
 
 ## Run
 
@@ -60,7 +60,15 @@ Select a task and choose **Lembrete** to enter a local date and time (`YYYY-MM-D
 
 Open **Notificações do Windows** to activate, deactivate, query the schedule or request a test notification. The background worker checks every five minutes while the user is signed in, even when the application window is closed. Windows notification settings may suppress visible popups. No administrator account or password is requested. Paths to Python, the project and the database must remain available.
 
-**Integration status:** business rules and interface checks pass, but native notification display and scheduled-task registration could not be validated in the assistant's execution environment. Background reminders have not been activated there. Run the application directly from your normal Windows session before testing these controls. For this development computer, `Launch-PlanoLocal.cmd` is supplied outside the repository. See [setup, limitations and verification](docs/WINDOWS_REMINDERS.md).
+**Integration status:** the owner confirmed that the test notification appeared and the scheduler status was active without errors in the normal Windows session. This is owner-reported verification; the assistant's execution environment could not access these Windows services. Timed closed-app delivery and sleep/battery behavior have not been separately confirmed. For this development computer, `Launch-PlanoLocal.cmd` is supplied outside the repository. See [setup, limitations and verification](docs/WINDOWS_REMINDERS.md).
+
+### Backup and restore
+
+Choose **Criar backup** to save a `.plano-backup` file containing projects, tasks, checklists, planning fields, weekly capacities and the reminder delivery ledger. The file is a versioned, data-only JSON snapshot and is not encrypted.
+
+Choose **Restaurar** to inspect and restore a supported backup. The confirmation shows project/task counts and explains that this replaces all current data. Before replacement, the app saves a uniquely named `*.before-restore-*.plano-backup` recovery copy next to the live database. Invalid backups are rejected; write failures roll back the database transaction. A changed source file after preview is rejected too.
+
+Restoring does not merge projects or install the Windows schedule. Restoring an older reminder ledger may make old reminders eligible again. Close other application windows before restoring. See [backup rules and recovery steps](docs/BACKUPS.md).
 
 ### Automated checks
 

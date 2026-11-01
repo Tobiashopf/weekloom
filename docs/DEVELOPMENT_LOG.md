@@ -62,3 +62,14 @@ Initial owner feedback has been received (see below). Feature acceptance, visual
 - All 24 automated tests passed. A test fixture was shortened to avoid the host's filesystem path limit; paths with spaces and XML-special characters remain covered.
 - GUI smoke checks passed for the checklist and custom reminder dialog, along with existing planning flows.
 - Owner acceptance of checklists and end-to-end Windows notification validation remain pending. These are explicit remaining tasks, not completed release features.
+
+## November 1, 2026 — Owner confirmation and backup/restore
+
+- In response to an explicit question, the owner confirmed that the Windows test notification appeared and the schedule was active without errors. Timed closed-app delivery was not separately reported.
+- Implemented versioned `.plano-backup` snapshots containing all application tables, including checklists, planning fields and reminder delivery records.
+- Added structural and semantic validation before restore, including relationship and cycle checks. Restore loads data into the application's existing schema rather than executing imported SQL.
+- Added a confirmation with project/task counts, automatic recovery copy, transactional replacement, rollback on failure and UI refresh after success.
+- Added protection against overwriting the live database and against the backup changing after the preview. Backup publication uses a temporary file and atomic replacement.
+- All 31 automated tests passed, including full round trips, recovery contents, invalid files, simulated write failures, failed recovery-copy creation and interrupted backup publication.
+- GUI smoke checks passed for backup creation, cancellation and confirmed restoration using temporary test data.
+- No restoration of the owner's real data was performed. Owner acceptance of backup/restore remains pending.

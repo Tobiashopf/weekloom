@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import tempfile
 import tkinter as tk
+from unittest.mock import patch
 from tkinter import ttk
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -93,8 +94,20 @@ with tempfile.TemporaryDirectory() as temp:
         next(w for w in body.winfo_children() if isinstance(w, ttk.Entry)).insert(0, "2030-01-01 10:30")
         next(w for w in body.winfo_children() if isinstance(w, ttk.Button)).invoke()
         assert next(t for t in store.tasks(project) if t["id"] == checklist_task)["reminder_at"] == "2030-01-01 10:30"
+        backup = Path(temp) / "gui.plano-backup"
+        with patch("app.filedialog.asksaveasfilename", return_value=str(backup)), patch("app.messagebox.showinfo"):
+            app.create_backup()
+        assert backup.exists()
+        store.add_project("Temporary extra project")
+        with patch("app.filedialog.askopenfilename", return_value=str(backup)), patch("app.messagebox.askyesno", return_value=False):
+            app.restore_backup()
+        assert len(store.projects()) == 2
+        with patch("app.filedialog.askopenfilename", return_value=str(backup)), patch("app.messagebox.askyesno", return_value=True), patch("app.messagebox.showinfo"):
+            app.restore_backup()
+        assert len(store.projects()) == 1
+        assert "Example" in app.heading.cget("text")
         root.after_cancel(app.reminder_timer)
-        print("GUI smoke check passed: agenda, alerts, descriptions, progress, planning, weekly capacity, checklist and custom reminder dialog.")
+        print("GUI smoke check passed: planning, checklists, reminders, backup creation, cancelled restore and confirmed restore.")
     finally:
         root.destroy()
         store.close()

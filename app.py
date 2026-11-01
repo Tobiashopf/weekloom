@@ -7,7 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 
 from planner import Planner, STATUSES
 
@@ -48,6 +48,10 @@ class App:
         self.edit_project_button = ttk.Button(left, text="Editar projeto / descrição", command=self.edit_project, state="disabled")
         self.edit_project_button.pack(fill="x", pady=(0, 10))
         ttk.Button(left, text="Notificações do Windows", command=self.open_notification_settings).pack(fill="x", pady=(0, 10))
+        backup_bar = ttk.Frame(left)
+        backup_bar.pack(fill="x", pady=(0, 10))
+        ttk.Button(backup_bar, text="Criar backup", command=self.create_backup).pack(side="left", fill="x", expand=True)
+        ttk.Button(backup_bar, text="Restaurar", command=self.restore_backup).pack(side="left", fill="x", expand=True)
         self.projects = ttk.Treeview(left, show="tree", selectmode="browse", height=10)
         self.projects.column("#0", width=230, minwidth=150)
         self.projects.pack(fill="both", expand=True)
@@ -404,6 +408,57 @@ class App:
         summary.pack(anchor="w", pady=(8, 0))
         tree.bind("<Double-1>", lambda event: act(toggle))
         refresh()
+
+    def create_backup(self):
+        from backups import create_backup
+        destination = filedialog.asksaveasfilename(parent=self.root, title="Salvar backup", defaultextension=".plano-backup", initialfile=f"plano-local-{date.today().isoformat()}.plano-backup", filetypes=[("Backup do Plano Local", "*.plano-backup")])
+        if not destination:
+            return
+        try:
+            path = create_backup(self.store, destination)
+        except (ValueError, OSError, sqlite3.Error) as error:
+            messagebox.showerror("Backup", str(error), parent=self.root)
+            return
+        messagebox.showinfo("Backup criado", f"Projetos, tarefas, subtarefas e configurações salvos em:\n{path}", parent=self.root)
+
+    def restore_backup(self):
+        from backups import read_backup, restore_backup
+        source = filedialog.askopenfilename(parent=self.root, title="Escolher backup para restaurar", filetypes=[("Backup do Plano Local", "*.plano-backup")])
+        if not source:
+            return
+        try:
+            payload = read_backup(source)
+            projects = len(payload["tables"]["projects"])
+            tasks = len(payload["tables"]["tasks"])
+            confirmed = messagebox.askyesno("Restaurar backup", f"Este backup contém {projects} projeto(s) e {tasks} tarefa(s).\n\nEle substituirá TODOS os dados atuais. Uma cópia dos dados atuais será salva antes.\n\nLembretes antigos podem voltar a ser enviados. Feche outras janelas do aplicativo antes de continuar.\n\nRestaurar agora?", parent=self.root)
+            if not confirmed:
+                return
+            safety = restore_backup(self.store, source, expected=payload)
+        except (ValueError, OSError, sqlite3.Error) as error:
+            messagebox.showerror("Restauração", str(error), parent=self.root)
+            return
+        for window in self.root.winfo_children():
+            if isinstance(window, tk.Toplevel):
+                window.destroy()
+        self.agenda_window = self.week_window = None
+        self.project_id = None
+        self.notified.clear()
+        self.reload_projects()
+        projects = self.store.projects()
+        if projects:
+            self.projects.selection_set(str(projects[0]["id"]))
+            self.select_project()
+        else:
+            self.tasks.delete(*self.tasks.get_children())
+            self.heading.configure(text="Crie seu primeiro projeto")
+            self.description.configure(text="")
+            self.summary.configure(text="Nenhuma tarefa ainda.")
+            self.effort_summary.configure(text="")
+            self.progress["value"] = 0
+            self.add.configure(state="disabled")
+            self.edit_project_button.configure(state="disabled")
+        self.check_reminders()
+        messagebox.showinfo("Backup restaurado", f"Restauração concluída. A cópia dos dados anteriores está em:\n{safety}", parent=self.root)
 
     def configure_reminder(self):
         selected = self.tasks.selection()

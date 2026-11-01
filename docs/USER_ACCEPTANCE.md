@@ -72,3 +72,7 @@ Update: the owner subsequently reported that the weekly-planning iteration was c
 4. Follow [Windows reminder setup and verification](WINDOWS_REMINDERS.md) from a normal Windows session.
 
 Results for this iteration: pending. Native background reminder activation is not yet verified.
+
+Update: the owner explicitly confirmed that the test notification appeared and scheduler status was active without errors. Record these two checks as owner-confirmed; timed delivery with the app closed remains unreported.
+
+Next acceptance exercise: follow [backup and recovery](BACKUPS.md) using a temporary project after first creating a backup. Results remain pending.
