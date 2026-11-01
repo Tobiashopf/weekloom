@@ -2,6 +2,9 @@
 from datetime import date, timedelta
 from pathlib import Path
 import sqlite3
+import math
+from uuid import uuid4
+from contextlib import closing
 
 STATUSES = ("A fazer", "Em andamento", "Concluída")
 
@@ -26,6 +29,19 @@ class Planner:
                     CHECK(status IN ('A fazer', 'Em andamento', 'Concluída'))
             );
         """)
+        columns = {row["name"] for row in self.db.execute("PRAGMA table_info(tasks)")}
+        if "estimate_hours" not in columns:
+            if self.db.execute("SELECT COUNT(*) FROM tasks").fetchone()[0]:
+                backup = path.with_name(path.stem + ".pre-planning-" + uuid4().hex[:8] + ".sqlite3")
+                with closing(sqlite3.connect(backup)) as target:
+                    self.db.backup(target)
+            with self.db:
+                self.db.execute("BEGIN")
+                self.db.execute("ALTER TABLE tasks ADD COLUMN estimate_hours REAL")
+                self.db.execute("ALTER TABLE tasks ADD COLUMN planned_for TEXT")
+                self.db.execute("ALTER TABLE tasks ADD COLUMN depends_on INTEGER REFERENCES tasks(id)")
+        self.db.execute("CREATE TABLE IF NOT EXISTS weekly_capacity (week TEXT PRIMARY KEY, hours REAL NOT NULL)")
+        self.db.commit()
 
     @staticmethod
     def required(text):
@@ -103,9 +119,97 @@ class Planner:
             ORDER BY status = 'Concluída', due IS NULL, due, id
         """, (project_id,)).fetchall()
 
+    @staticmethod
+    def hours(value):
+        if value is None or str(value).strip() == "":
+            return None
+        try:
+            result = float(str(value).replace(",", "."))
+        except (ValueError, TypeError):
+            raise ValueError("Informe horas como um número positivo, por exemplo 1,5.") from None
+        if not math.isfinite(result) or not 0 < result <= 10000:
+            raise ValueError("As horas devem ser maiores que zero e no máximo 10000.")
+        return result
+
+    def blockers(self, task_id):
+        return self.db.execute("""
+            SELECT parent.id, parent.title FROM tasks child
+            JOIN tasks parent ON parent.id = child.depends_on
+            WHERE child.id = ? AND parent.status != 'Concluída'
+        """, (task_id,)).fetchall()
+
+    def save_plan(self, task_id, estimate, planned_for, depends_on):
+        """Save planning fields atomically; reject cross-project links and cycles."""
+        estimate = self.hours(estimate)
+        planned_for = self.deadline(planned_for)
+        task = self.db.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+        if task is None:
+            raise ValueError("Tarefa não encontrada.")
+        if depends_on is not None:
+            parent = self.db.execute("SELECT * FROM tasks WHERE id = ?", (depends_on,)).fetchone()
+            if parent is None or parent["project_id"] != task["project_id"]:
+                raise ValueError("A dependência precisa ser uma tarefa deste projeto.")
+            visited = {task_id}
+            node = parent
+            while node is not None:
+                if node["id"] in visited:
+                    raise ValueError("Essa dependência criaria um ciclo entre tarefas.")
+                visited.add(node["id"])
+                node = self.db.execute("SELECT * FROM tasks WHERE id = ?", (node["depends_on"],)).fetchone()
+            if task["status"] != "A fazer" and parent["status"] != "Concluída":
+                raise ValueError("Volte a tarefa para A fazer antes de adicionar uma dependência pendente.")
+        with self.db:
+            self.db.execute("UPDATE tasks SET estimate_hours = ?, planned_for = ?, depends_on = ? WHERE id = ?",
+                            (estimate, planned_for, depends_on, task_id))
+
+    @staticmethod
+    def week_start(day):
+        return day - timedelta(days=day.weekday())
+
+    def set_capacity(self, day, hours):
+        hours = self.hours(hours)
+        if hours is None or hours > 168:
+            raise ValueError("Informe uma capacidade semanal maior que zero e no máximo 168 horas.")
+        with self.db:
+            self.db.execute("INSERT INTO weekly_capacity(week, hours) VALUES (?, ?) ON CONFLICT(week) DO UPDATE SET hours = excluded.hours",
+                            (self.week_start(day).isoformat(), hours))
+
+    def week_plan(self, day):
+        start = self.week_start(day)
+        end = start + timedelta(days=6)
+        tasks = self.db.execute("""
+            SELECT t.*, p.name AS project_name, parent.title AS prerequisite,
+                   CASE WHEN parent.id IS NOT NULL AND parent.status != 'Concluída' THEN 1 ELSE 0 END AS blocked
+            FROM tasks t JOIN projects p ON p.id = t.project_id
+            LEFT JOIN tasks parent ON parent.id = t.depends_on
+            WHERE t.planned_for BETWEEN ? AND ? ORDER BY t.planned_for, t.id
+        """, (start.isoformat(), end.isoformat())).fetchall()
+        capacity = self.db.execute("SELECT hours FROM weekly_capacity WHERE week = ?", (start.isoformat(),)).fetchone()
+        pending = [t for t in tasks if t["status"] != "Concluída"]
+        return dict(start=start, end=end, tasks=tasks,
+                    capacity=capacity[0] if capacity else None,
+                    pending_hours=sum(t["estimate_hours"] or 0 for t in pending),
+                    missing_estimates=sum(t["estimate_hours"] is None for t in tasks),
+                    completed_hours=sum(t["estimate_hours"] or 0 for t in tasks if t["status"] == "Concluída"),
+                    blocked=sum(t["blocked"] for t in pending),
+                    late_plans=sum(bool(t["due"] and t["planned_for"] > t["due"]) for t in pending),
+                    unscheduled=self.db.execute("SELECT COUNT(*) FROM tasks WHERE planned_for IS NULL AND status != 'Concluída'").fetchone()[0])
+
+    def effort_progress(self, project_id):
+        tasks = self.tasks(project_id)
+        if not tasks or any(t["estimate_hours"] is None for t in tasks):
+            return None
+        total = sum(t["estimate_hours"] for t in tasks)
+        return 100 * sum(t["estimate_hours"] for t in tasks if t["status"] == "Concluída") / total
+
     def update_task(self, task_id, title, due, status):
         if status not in STATUSES:
             raise ValueError("Status inválido.")
+        if status != "A fazer" and self.blockers(task_id):
+            raise ValueError("Conclua a tarefa anterior antes de iniciar ou concluir esta tarefa.")
+        if status != "Concluída" and self.db.execute(
+                "SELECT 1 FROM tasks WHERE depends_on = ? AND status != 'A fazer'", (task_id,)).fetchone():
+            raise ValueError("Volte as tarefas dependentes para A fazer antes de reabrir esta tarefa.")
         with self.db:
             cursor = self.db.execute(
                 "UPDATE tasks SET title = ?, due = ?, status = ? WHERE id = ?",

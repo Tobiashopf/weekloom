@@ -1,6 +1,6 @@
 """Run with Python 3.10+ (including Tk): python app.py."""
 import argparse
-from datetime import date
+from datetime import date, timedelta
 import os
 import sqlite3
 from pathlib import Path
@@ -16,6 +16,8 @@ class App:
         self.project_id = None
         self.notified = set()
         self.agenda_window = None
+        self.week_window = None
+        self.week_day = date.today()
         root.title("Plano Local — seus projetos pessoais")
         root.geometry("1060x680")
         root.minsize(820, 540)
@@ -34,6 +36,7 @@ class App:
         self.reminder = ttk.Label(reminder_bar, text="", wraplength=680)
         self.reminder.pack(side="left", fill="x", expand=True)
         ttk.Button(reminder_bar, text="Agenda e alertas", command=self.open_agenda).pack(side="right")
+        ttk.Button(reminder_bar, text="Planejar semana", command=self.open_week).pack(side="right", padx=8)
         columns = ttk.Panedwindow(outer, orient="horizontal")
         columns.pack(fill="both", expand=True)
         left, right = ttk.Frame(columns), ttk.Frame(columns, padding=(20, 0, 0, 0))
@@ -54,11 +57,14 @@ class App:
         self.progress.pack(fill="x")
         self.summary = ttk.Label(right, text="Nenhuma tarefa ainda.")
         self.summary.pack(anchor="w", pady=(5, 12))
+        self.effort_summary = ttk.Label(right, text="", wraplength=600)
+        self.effort_summary.pack(anchor="w", pady=(0, 8))
         toolbar = ttk.Frame(right)
         toolbar.pack(fill="x", pady=(0, 10))
         self.add = ttk.Button(toolbar, text="+ Nova tarefa", command=self.new_task, state="disabled")
         self.add.pack(side="left")
         ttk.Button(toolbar, text="Editar tarefa", command=self.edit_task).pack(side="left", padx=8)
+        ttk.Button(toolbar, text="Planejar tarefa", command=self.plan_task).pack(side="left")
         frame = ttk.Frame(right)
         frame.pack(fill="both", expand=True)
         self.tasks = ttk.Treeview(frame, columns=("title", "due", "status"), show="headings", selectmode="browse")
@@ -92,6 +98,98 @@ class App:
         self.notified = keys
         if self.agenda_window is not None and self.agenda_window.winfo_exists():
             self.refresh_agenda()
+        if self.week_window is not None and self.week_window.winfo_exists():
+            self.refresh_week()
+
+    def open_week(self):
+        if self.week_window is not None and self.week_window.winfo_exists():
+            self.week_window.lift()
+            return
+        window = self.week_window = tk.Toplevel(self.root)
+        window.title("Planejamento semanal")
+        window.geometry("1000x560")
+        window.minsize(850, 460)
+        body = ttk.Frame(window, padding=20)
+        body.pack(fill="both", expand=True)
+        navigation = ttk.Frame(body)
+        navigation.pack(fill="x")
+        ttk.Button(navigation, text="← Anterior", command=lambda: self.move_week(-7)).pack(side="left")
+        ttk.Button(navigation, text="Esta semana", command=lambda: self.move_week(None)).pack(side="left", padx=6)
+        ttk.Button(navigation, text="Próxima →", command=lambda: self.move_week(7)).pack(side="left")
+        self.week_heading = ttk.Label(body, text="", font=("Segoe UI", 15, "bold"))
+        self.week_heading.pack(anchor="w", pady=(12, 8))
+        capacity_bar = ttk.Frame(body)
+        capacity_bar.pack(fill="x")
+        ttk.Label(capacity_bar, text="Horas disponíveis nesta semana:").pack(side="left")
+        self.capacity_var = tk.StringVar()
+        ttk.Entry(capacity_bar, textvariable=self.capacity_var, width=8).pack(side="left", padx=8)
+        ttk.Button(capacity_bar, text="Salvar capacidade", command=self.save_capacity).pack(side="left")
+        self.week_summary = ttk.Label(body, text="", wraplength=900)
+        self.week_summary.pack(anchor="w", pady=10)
+        frame = ttk.Frame(body)
+        frame.pack(fill="both", expand=True)
+        self.week_tree = ttk.Treeview(frame, columns=("day", "project", "task", "hours", "state"), show="headings")
+        for key, label, width in (("day", "Execução", 100), ("project", "Projeto", 150), ("task", "Tarefa", 250), ("hours", "Horas", 70), ("state", "Situação", 220)):
+            self.week_tree.heading(key, text=label)
+            self.week_tree.column(key, width=width, minwidth=60)
+        scrollbar = ttk.Scrollbar(frame, orient="vertical", command=self.week_tree.yview)
+        self.week_tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar.pack(side="right", fill="y")
+        self.week_tree.pack(fill="both", expand=True)
+        self.week_tree.tag_configure("risk", foreground="#a52b24")
+        self.week_tree.bind("<Double-1>", self.plan_week_task)
+        ttk.Label(body, text="Use Planejar tarefa para definir o dia de execução, as horas e uma dependência.\nClique duas vezes em uma linha para replanejar. As horas são estimativas, não tempo medido.", wraplength=900).pack(anchor="w", pady=(10, 0))
+        self.load_capacity()
+        self.refresh_week()
+
+    def load_capacity(self):
+        value = self.store.week_plan(self.week_day)["capacity"]
+        self.capacity_var.set("" if value is None else f"{value:g}")
+
+    def move_week(self, days):
+        self.week_day = date.today() if days is None else self.week_day + timedelta(days=days)
+        self.load_capacity()
+        self.refresh_week()
+
+    def save_capacity(self):
+        try:
+            self.store.set_capacity(self.week_day, self.capacity_var.get())
+        except (ValueError, sqlite3.Error) as error:
+            messagebox.showerror("Capacidade semanal", str(error), parent=self.week_window)
+            return
+        self.refresh_week()
+
+    def refresh_week(self):
+        plan = self.store.week_plan(self.week_day)
+        self.week_heading.configure(text=f'{plan["start"]:%d/%m} a {plan["end"]:%d/%m/%Y}')
+        load = plan["pending_hours"] + plan["completed_hours"]
+        capacity = plan["capacity"]
+        capacity_text = "Defina sua capacidade semanal." if capacity is None else f"Capacidade: {capacity:g} h."
+        overload = capacity is not None and load > capacity
+        if overload:
+            capacity_text += f" Excesso estimado: {load - capacity:g} h. Replaneje entregas."
+        text = (f'{plan["pending_hours"]:g} h pendentes · {plan["completed_hours"]:g} h estimadas concluídas. {capacity_text}\n'
+                f'{plan["missing_estimates"]} tarefa(s) sem estimativa · {plan["blocked"]} bloqueada(s) · '
+                f'{plan["late_plans"]} planejada(s) após o prazo · {plan["unscheduled"]} sem dia de execução (todos os projetos).')
+        self.week_summary.configure(text=text, foreground="#a52b24" if overload or plan["blocked"] or plan["late_plans"] else "#263442")
+        self.week_tree.delete(*self.week_tree.get_children())
+        for task in plan["tasks"]:
+            state = "Bloqueada: " + task["prerequisite"] if task["blocked"] else task["status"]
+            late_plan = task["status"] != "Concluída" and task["due"] and task["planned_for"] > task["due"]
+            if late_plan:
+                state += " · após prazo"
+            self.week_tree.insert("", "end", iid=str(task["id"]), values=(task["planned_for"], task["project_name"], task["title"], "—" if task["estimate_hours"] is None else f'{task["estimate_hours"]:g}', state), tags=("risk",) if task["blocked"] or late_plan else ())
+
+    def plan_week_task(self, event=None):
+        selected = self.week_tree.selection()
+        if not selected:
+            return
+        task = next(t for t in self.store.week_plan(self.week_day)["tasks"] if str(t["id"]) == selected[0])
+        self.project_id = task["project_id"]
+        self.reload_projects()
+        self.refresh_tasks()
+        self.tasks.selection_set(selected[0])
+        self.plan_task()
 
     def poll_reminders(self):
         self.check_reminders()
@@ -161,10 +259,13 @@ class App:
         for task in rows:
             late = bool(task["due"] and task["due"] < date.today().isoformat() and task["status"] != "Concluída")
             overdue += late
-            self.tasks.insert("", "end", iid=str(task["id"]), values=(task["title"], task["due"] or "Sem prazo", task["status"]), tags=("late",) if late else ())
+            blocked = self.store.blockers(task["id"])
+            self.tasks.insert("", "end", iid=str(task["id"]), values=(task["title"], task["due"] or "Sem prazo", "Bloqueada" if blocked else task["status"]), tags=("late",) if late or blocked else ())
         percent = self.store.completion(project)
         self.progress["value"] = percent
         self.summary.configure(text=f'{percent:.0f}% concluído · {project["done"]} de {project["total"]} tarefas · {overdue} atrasada(s)')
+        effort = self.store.effort_progress(self.project_id)
+        self.effort_summary.configure(text="Progresso por esforço: estime as horas de todas as tarefas para calcular." if effort is None else f"Progresso por esforço estimado: {effort:.0f}%")
 
     def dialog(self, title, fields, save):
         window = tk.Toplevel(self.root)
@@ -218,6 +319,22 @@ class App:
     def new_task(self):
         if self.project_id is not None:
             self.dialog("Nova tarefa", [("Título", "", None), ("Prazo opcional (AAAA-MM-DD)", "", None)], lambda title, due: self.store.add_task(self.project_id, title, due))
+
+    def plan_task(self):
+        selected = self.tasks.selection()
+        if not selected:
+            messagebox.showinfo("Planejar tarefa", "Selecione uma tarefa primeiro.", parent=self.root)
+            return
+        tasks = self.store.tasks(self.project_id)
+        task = next(t for t in tasks if str(t["id"]) == selected[0])
+        choices = {"Nenhuma": None}
+        choices.update({f'{t["id"]} · {t["title"]}': t["id"] for t in tasks if t["id"] != task["id"]})
+        current = next(label for label, key in choices.items() if key == task["depends_on"])
+        self.dialog("Planejar tarefa", [
+            ("Esforço estimado em horas (opcional; exemplo: 1,5)", "" if task["estimate_hours"] is None else str(task["estimate_hours"]), None),
+            ("Dia de execução (opcional; AAAA-MM-DD)", task["planned_for"] or "", None),
+            ("Depende da conclusão de", current, tuple(choices)),
+        ], lambda hours, day, dependency: self.store.save_plan(task["id"], hours, day, choices[dependency]))
 
     def edit_task(self):
         selected = self.tasks.selection()

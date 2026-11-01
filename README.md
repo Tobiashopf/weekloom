@@ -2,6 +2,8 @@
 
 A desktop planner for personal projects, written in Python with Tkinter and SQLite. Create projects, break them into tasks, set optional deadlines and track completion without an account or external service.
 
+The project is evolving into a weekly execution planner: assign work to a day, estimate effort, identify prerequisite tasks and compare the week's planned workload with available hours.
+
 ## Current status
 
 Initial working prototype, started November 1, 2026. No established user base or long-term usage is claimed. The interface is in Brazilian Portuguese.
@@ -31,6 +33,20 @@ Choose **Editar projeto / descrição** to update a project's name and multiline
 Choose **Agenda e alertas** to see unfinished tasks with deadlines across all projects. Alerts include overdue tasks and deadlines today or tomorrow, using the computer's local date. A banner and system bell signal these deadlines at startup and while the application is open; checks run every minute and after saves. Sound depends on system settings. No Windows notification service or closed-app/background reminder is installed.
 
 Project completion is completed tasks divided by all tasks, shown as a rounded whole percentage. All tasks have equal weight; in-progress tasks do not receive partial credit. Empty projects show 0%. Adding or reopening tasks can reduce the percentage.
+
+## Weekly execution planning
+
+1. Select a task and choose **Planejar tarefa**.
+2. Enter optional estimated hours (for example `1.5` or `1,5`) and an execution date (`YYYY-MM-DD`). This is separate from the delivery deadline.
+3. Optionally select one prerequisite task from the same project. A blocked task cannot start or complete until its prerequisite is complete. Cycles are rejected.
+4. Open **Planejar semana** and enter the total hours available across projects for the selected Monday–Sunday week.
+5. Review the workload, missing estimates, blocked tasks and execution dates after deadlines. Navigate between weeks or double-click a row to replan it.
+
+The capacity comparison includes estimated hours for both completed and pending tasks in the selected week. Completed hours are estimates, not measured time. Tasks without estimates make the workload incomplete; unscheduled work is counted separately. Capacity is a weekly total, not automatically prorated by remaining days.
+
+The project view also shows effort-weighted completion once every task has an estimate. For example, completing a 1-hour task while a 3-hour task remains gives 25% by effort and 50% by task count. No partial credit is assigned to in-progress work.
+
+See [weekly planning rules and acceptance steps](docs/WEEKLY_PLANNING.md). When upgrading a database containing existing tasks, the application saves a `*.pre-planning-*.sqlite3` copy next to it before adding planning fields. The copy is a migration safeguard, not a user-facing backup/restore feature. Existing tasks start with no estimate, execution date or prerequisite.
 
 ## Verify
 

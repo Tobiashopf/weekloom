@@ -48,8 +48,29 @@ with tempfile.TemporaryDirectory() as temp:
         assert "50%" in app.summary.cget("text")
         assert len(app.agenda_tree.get_children()) == 0
         assert "Nenhum prazo" in app.reminder.cget("text")
+        app.tasks.selection_set(str(task))
+        app.plan_task()
+        root.update()
+        dialog = [w for w in root.winfo_children() if isinstance(w, tk.Toplevel) and w != app.agenda_window][0]
+        body = dialog.winfo_children()[0]
+        entries = [w for w in body.winfo_children() if isinstance(w, ttk.Entry) and not isinstance(w, ttk.Combobox)]
+        entries[0].insert(0, "3")
+        entries[1].insert(0, date.today().isoformat())
+        next(w for w in body.winfo_children() if isinstance(w, ttk.Button)).invoke()
+        root.update()
+        app.open_week()
+        app.capacity_var.set("2")
+        app.save_capacity()
+        root.update()
+        assert len(app.week_tree.get_children()) == 1
+        assert "Excesso estimado: 1 h" in app.week_summary.cget("text")
+        app.move_week(7)
+        assert len(app.week_tree.get_children()) == 0
+        app.move_week(None)
+        assert len(app.week_tree.get_children()) == 1
+        assert app.capacity_var.get() == "2"
         root.after_cancel(app.reminder_timer)
-        print("GUI smoke check passed: agenda, alert deduplication, description editing, progress.")
+        print("GUI smoke check passed: agenda, alerts, descriptions, progress, task planning and weekly capacity/navigation.")
     finally:
         root.destroy()
         store.close()

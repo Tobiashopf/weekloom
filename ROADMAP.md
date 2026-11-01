@@ -1,6 +1,6 @@
 # Development roadmap
 
-Initial owner feedback has been received. The owner requested an agenda, approaching-deadline alerts, explicit completion percentages and project descriptions. An initial implementation is complete and awaits owner acceptance. The remaining estimates below are provisional: 26–38 hours.
+Initial owner feedback has been received. The owner reported the agenda/progress/description iteration worked and agreed to develop a weekly execution planner. Effort estimates, execution dates, single-prerequisite dependencies and weekly capacity are now implemented and await owner acceptance. Remaining estimates below are provisional: 24–36 hours. They are planning estimates, not measured or billable hours.
 
 | Task | Execution steps | Acceptance criteria | Estimate |
 |---|---|---|---|
@@ -9,7 +9,7 @@ Initial owner feedback has been received. The owner requested an agenda, approac
 | Search and filters | Define status/deadline filters; implement controls; test combinations | Find tasks without changing data or mixing projects | 3–4 h |
 | Backup and restore | Create consistent copies; validate format; protect original data; test failures | Restore projects and tasks; reject invalid files | 4–6 h |
 | Export and import | Define versioned JSON; validate input; handle conflicts; test round trips | Preserve content, relationships and statuses | 4–6 h |
-| Checklists and dependencies | Define subtasks and blockers; reject cycles; build controls; test chains | Dependencies are visible and cycles are rejected | 5–7 h |
+| Subtask checklists and multiple prerequisites | Define checklist semantics; extend the dependency model and editor; test combinations | Checklist completion is useful and multiple prerequisites preserve cycle protection; single-prerequisite support is already implemented | 3–5 h |
 | Accessibility and interface | Review keyboard, focus, contrast and resizing; fix issues; validate | Core workflows work with keyboard and varied window sizes | 3–4 h |
 | Packaging and release | Package for Windows; test clean installation; document upgrades | Reproducible distributable with verified instructions | 4–6 h |
 
@@ -17,7 +17,7 @@ Initial owner feedback has been received. The owner requested an agenda, approac
 
 Follow [the user acceptance checklist](docs/USER_ACCEPTANCE.md). Record actual observations before marking items complete. Select the next implementation priority from that feedback.
 
-Implemented from feedback: chronological agenda, in-app date-based alerts, numeric progress and editable multiline descriptions. Possible follow-up, not included in estimates: time-of-day reminders and native Windows notifications while the application is closed. Confirm the need before selecting a background scheduling design.
+Implemented from feedback: chronological agenda, in-app date-based alerts, numeric progress, editable multiline descriptions, effort estimates, execution dates, single prerequisites, weekly capacity and effort-weighted progress. Follow-up not yet estimated: time-of-day reminders and native Windows notifications while the application is closed. A scheduling design and operating-system validation are still needed.
 
 ## Submission preparation
 

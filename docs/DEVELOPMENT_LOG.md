@@ -36,3 +36,16 @@ Initial owner feedback has been received (see below). Feature acceptance, visual
 - All nine persistence/business-rule tests passed, including reminder boundaries across year-end and project description persistence.
 - The explicit GUI smoke check passed for agenda filtering, repeated-alert suppression, description editing and displayed percentage changes.
 - No background notification service was installed. Owner acceptance of these new features is pending.
+
+## November 1, 2026 — Weekly execution planning
+
+- The owner confirmed the previous iteration worked, questioned the project's depth and agreed to pursue a more useful weekly execution planner. This is qualitative feedback, not confirmation that every acceptance step was performed.
+- Added optional effort estimates, execution dates and one same-project prerequisite per task.
+- Added cycle rejection, blocked-state enforcement and protection against reopening a prerequisite while dependent work is active or complete.
+- Added a Monday–Sunday cross-project view, week navigation, persisted weekly capacity and workload/risk summaries.
+- Added effort-weighted progress without replacing task-count progress. Unknown estimates remain explicit.
+- Added automatic pre-upgrade database backup when existing tasks are present, followed by transactional schema changes.
+- The migration test initially exposed open SQLite backup handles on Windows. Explicit connection closing fixed the issue in both implementation and test fixtures.
+- All 16 automated tests passed after the fix, including legacy-data preservation, backup-once behavior, planning persistence, weekly boundaries, invalid inputs, dependencies and progress calculations.
+- The GUI smoke check passed, including planning dialog submission, weekly overload display, navigation and stored capacity, as well as the earlier agenda/description/progress checks.
+- Documentation is in English. Owner acceptance and visual/accessibility review of this iteration remain pending.
