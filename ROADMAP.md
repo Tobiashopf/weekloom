@@ -1,26 +1,30 @@
-# Roteiro de evolução
+# Development roadmap
 
-Proposta inicial para validação pelo proprietário. O objetivo é melhorar uma ferramenta que ele queira usar; as estimativas precisam ser revisadas após o uso real. Nenhuma tarefa abaixo está concluída. Total preliminar: 28 a 40 horas.
+Initial proposal awaiting owner validation. Estimates must be revised after real use. None of these tasks is complete. Preliminary total: 28–40 hours.
 
-| Tarefa | Passos de execução | Critério de conclusão | Estimativa |
+| Task | Execution steps | Acceptance criteria | Estimate |
 |---|---|---|---|
-| Uso real e refinamento | Planejar um projeto pessoal sem dados de terceiros; registrar dificuldades; priorizar ajustes | Fluxo revisado com feedback concreto do proprietário | 2–3 h |
-| Editar e arquivar projetos | Definir arquivamento; migrar banco; implementar edição; testar reabertura | Projetos arquivados preservam tarefas e podem ser restaurados | 3–4 h |
-| Busca e filtros | Definir filtros por status/prazo; implementar consulta e controles; testar combinações | Usuário encontra tarefas sem alterar dados ou misturar projetos | 3–4 h |
-| Backup e restauração | Criar cópia consistente; validar formato; restaurar com proteção do original; testar falhas | Restauração recupera projetos e tarefas e rejeita arquivos inválidos | 4–6 h |
-| Exportação e importação | Definir esquema JSON versionado; validar entrada; tratar conflitos; testar ida e volta | Exportar e importar preserva conteúdo, relações e status | 4–6 h |
-| Checklist e dependências | Definir subtarefas e bloqueios; impedir ciclos; construir interface; testar encadeamentos | Dependências são visíveis e ciclos são recusados | 5–7 h |
-| Acessibilidade e interface | Revisar teclado, foco, contraste e redimensionamento; corrigir problemas; validar com proprietário | Fluxos principais funcionam pelo teclado e em diferentes tamanhos de tela | 3–4 h |
-| Distribuição e versão | Empacotar para Windows; testar em ambiente limpo; documentar atualização e limitações | Versão instalável reproduzível com instruções verificadas | 4–6 h |
+| Real-use validation | Plan a personal project; record friction; prioritize changes | Actual owner feedback informs the workflow | 2–3 h |
+| Project editing and archiving | Define behavior; migrate storage; implement editing; test restoration | Archived projects retain tasks and can be restored | 3–4 h |
+| Search and filters | Define status/deadline filters; implement controls; test combinations | Find tasks without changing data or mixing projects | 3–4 h |
+| Backup and restore | Create consistent copies; validate format; protect original data; test failures | Restore projects and tasks; reject invalid files | 4–6 h |
+| Export and import | Define versioned JSON; validate input; handle conflicts; test round trips | Preserve content, relationships and statuses | 4–6 h |
+| Checklists and dependencies | Define subtasks and blockers; reject cycles; build controls; test chains | Dependencies are visible and cycles are rejected | 5–7 h |
+| Accessibility and interface | Review keyboard, focus, contrast and resizing; fix issues; validate | Core workflows work with keyboard and varied window sizes | 3–4 h |
+| Packaging and release | Package for Windows; test clean installation; document upgrades | Reproducible distributable with verified instructions | 4–6 h |
 
-## Preparação para submissão
+## Current next step
 
-1. Revisar pessoalmente o protótipo e confirmar interesse em continuar o desenvolvimento.
-2. Confirmar propriedade pessoal e ausência de vínculos com empregador, cliente, universidade ou empresa.
-3. Publicar o repositório original com README e LICENSE, mantendo o histórico real.
-4. Registrar uso e correções reais ao longo do tempo. O programa não informa prazo mínimo de maturação.
-5. Revisar arquivos e histórico quanto a segredos e dados pessoais antes da publicação e da submissão.
-6. Atualizar este roteiro para que represente trabalho futuro realmente desejado, com pelo menos 20 horas restantes no momento da submissão.
-7. Preparar o formulário com fatos verificáveis; apresentar explicitamente o estágio inicial.
+Follow [the user acceptance checklist](docs/USER_ACCEPTANCE.md). Record actual observations before marking items complete. Select the next implementation priority from that feedback.
 
-Este projeto não recebeu aprovação do programa. Licença e finalidade compatíveis não garantem seleção.
+## Submission preparation
+
+1. Personally review the prototype and confirm interest in continued development.
+2. Confirm personal ownership and absence of employer, client, university or company claims.
+3. Publish the original repository with README and LICENSE, preserving real history.
+4. Record genuine use and fixes over time. The program specifies no minimum project age.
+5. Review files and history for secrets and personal data before publication and submission.
+6. Update this roadmap to reflect genuinely desired work, with at least 20 hours remaining at submission.
+7. Prepare the form using verifiable facts and disclose the early development stage.
+
+The project has not been approved by the program. Compatible purpose and licensing do not guarantee selection.

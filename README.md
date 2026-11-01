@@ -40,6 +40,10 @@ This prototype is for personal project planning. Do not enter third-party person
 
 ## Development
 
+All project documentation and development records are maintained in English. The application interface remains in Brazilian Portuguese.
+
+Start with the [user acceptance checklist](docs/USER_ACCEPTANCE.md) to try the prototype and record feedback. See the [development log](docs/DEVELOPMENT_LOG.md) for completed checks and outstanding validation.
+
 See [ROADMAP.md](ROADMAP.md) for proposed future work. Estimates are preliminary engineering estimates, not a commitment of paid hours. Git history should record actual work as it occurs, without backdating or manufacturing activity.
 
 Developed with substantial AI assistance. The project direction was selected by Tobias Hopf; implementation and documentation were produced with an AI coding assistant. Owner review and real-use validation remain pending.
